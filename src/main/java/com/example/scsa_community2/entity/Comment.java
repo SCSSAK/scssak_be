@@ -14,9 +14,12 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId; // 단일 기본 키 필드
 
-    @ManyToOne
-    @JoinColumn(name = "article_id", nullable = false)
-    private Article article;
+//    @ManyToOne
+//    @JoinColumn(name = "article_id", nullable = false)
+//    private Article article;
+
+//    @Column(value="article_id")
+//    private Long article_id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

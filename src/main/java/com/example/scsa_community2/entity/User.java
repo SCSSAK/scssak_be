@@ -22,7 +22,6 @@ public class User {
     private String userMessage;
     private String userImg;
     private Boolean userIsCp;
-    private Integer userPresentCount;
     private Integer userTardyCount;
-    private Integer userTotalTardyCount;
+
 }

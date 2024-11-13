@@ -14,9 +14,9 @@ public class ImageUrl {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long imageUrlId;
 
-    @ManyToOne
-    @JoinColumn(name = "article_id", nullable = false)
-    private Article article;
+//    @ManyToOne
+//    @JoinColumn(name = "article_id", nullable = false)
+//    private Article article;
 
     private String imageUrl;
     private Integer imageOrder;

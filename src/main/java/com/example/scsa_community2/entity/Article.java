@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "articles") // 명시적으로 "articles"로 설정
+@Table(name = "article_tbl")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,6 +13,10 @@ public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long articleId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private String articleTitle;
     private String articleContent;

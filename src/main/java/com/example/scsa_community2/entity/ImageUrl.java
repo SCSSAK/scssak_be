@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "image_urls") // 명시적으로 "image_urls"로 설정
+@Table(name = "image_url_tbl")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,7 +14,10 @@ public class ImageUrl {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long imageUrlId;
 
-    private Long articleId;
+    @ManyToOne
+    @JoinColumn(name = "article_id", nullable = false)
+    private Article article;
+
     private String imageUrl;
     private Integer imageOrder;
 }

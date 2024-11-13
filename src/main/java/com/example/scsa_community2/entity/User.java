@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users") // "user" 대신 "users"로 변경
+@Table(name = "user_tbl")
 @Getter
 @Setter
 @NoArgsConstructor

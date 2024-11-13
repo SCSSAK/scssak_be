@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "likes")
+@Table(name = "like_tbl")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,8 +12,12 @@ import lombok.*;
 @IdClass(LikeId.class)
 public class Like {
     @Id
-    private Long articleId;
+    @ManyToOne
+    @JoinColumn(name = "article_id", nullable = false)
+    private Article article;
 
     @Id
-    private String userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

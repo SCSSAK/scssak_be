@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "comments") // "comment" 대신 "comments"로 변경
+@Table(name = "comment_tbl")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,7 +15,13 @@ public class Comment {
     private Long commentId;
 
     @Id
-    private Long articleId;
+    @ManyToOne
+    @JoinColumn(name = "article_id", nullable = false)
+    private Article article;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private String commentContent;
     private java.sql.Date commentCreatedAt;

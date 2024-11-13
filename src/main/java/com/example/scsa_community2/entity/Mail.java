@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "mails") // "mail" 대신 "mails"로 변경
+@Table(name = "mail_tbl")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,11 +14,14 @@ public class Mail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mailId;
 
-    private String receiverId;
-    private String mailContent;
-    private java.sql.Date mailCreatedAt;
+    @ManyToOne
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
+
+    private String mailContent;
+    private java.sql.Date mailCreatedAt;
 }

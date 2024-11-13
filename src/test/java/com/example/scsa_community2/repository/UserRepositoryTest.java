@@ -16,13 +16,8 @@ public class UserRepositoryTest {
 
     @Test
     public void testCreateUser() {
-        User user = new User();
-        user.setUserId("testUser");
-        user.setUserPwd("password123");
-        user.setUserName("홍길동");
-        user.setUserIsStudent(true);
-        user.setUserJob("학생");
-
+        User user = new User("testUser", "password123", "홍길동", true, "학생", "hong@example.com", 1,
+                "자기소개", "profile.jpg", false, 10, 2, 12);
         userRepository.save(user);
 
         User foundUser = userRepository.findById("testUser").orElse(null);

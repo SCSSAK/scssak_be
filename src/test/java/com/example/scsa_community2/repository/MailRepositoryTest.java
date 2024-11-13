@@ -25,14 +25,21 @@ public class MailRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        User user = new User("testUser", "password123", "홍길동", true, "학생", "hong@example.com", 1,
+        User sender = new User("senderUser", "password123", "홍길동", true, "학생", "hong@example.com", 1,
                 "자기소개", "profile.jpg", false, 10, 2, 12);
-        userRepository.save(user);
+        userRepository.save(sender);
+
+        User receiver = new User("receiverUser", "password456", "김철수", true, "직장인", "kim@example.com", 2,
+                "안녕하세요", "profile2.jpg", false, 15, 1, 16);
+        userRepository.save(receiver);
     }
 
     @Test
     public void testCreateMail() {
-        Mail mail = new Mail(null, "receiverUser", "메일 내용", Date.valueOf(LocalDate.now()), userRepository.findById("testUser").orElse(null));
+        User sender = userRepository.findById("senderUser").orElseThrow();
+        User receiver = userRepository.findById("receiverUser").orElseThrow();
+
+        Mail mail = new Mail(null, sender, receiver, "메일 내용", Date.valueOf(LocalDate.now()));
         mailRepository.save(mail);
 
         Mail foundMail = mailRepository.findById(mail.getMailId()).orElse(null);

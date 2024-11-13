@@ -2,7 +2,6 @@ package com.example.scsa_community2.repository;
 
 import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.Comment;
-import com.example.scsa_community2.entity.CommentId;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.CommentRepository;
@@ -44,11 +43,12 @@ public class CommentRepositoryTest {
         Article article = articleRepository.findAll().get(0);
         User user = userRepository.findById("testUser").orElseThrow();
 
-        Comment comment = new Comment(1L, article, user, "댓글 내용", Date.valueOf(LocalDate.now()));
+        // Comment 엔티티 생성 및 저장
+        Comment comment = new Comment(null, article, user, "댓글 내용", Date.valueOf(LocalDate.now()));
         commentRepository.save(comment);
 
-        CommentId commentId = new CommentId(1L, article.getArticleId());
-        Comment foundComment = commentRepository.findById(commentId).orElse(null);
+        // 저장된 Comment 엔티티 조회
+        Comment foundComment = commentRepository.findById(comment.getCommentId()).orElse(null);
         assertThat(foundComment).isNotNull();
         assertThat(foundComment.getCommentContent()).isEqualTo("댓글 내용");
     }

@@ -9,12 +9,11 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(CommentId.class)
 public class Comment {
     @Id
-    private Long commentId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long commentId; // 단일 기본 키 필드
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "article_id", nullable = false)
     private Article article;

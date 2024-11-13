@@ -1,0 +1,32 @@
+version: "3.3"
+services:
+  api:
+    container_name: "api"
+    image: /geoparty-server-api:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    env_file: .gradle/.env
+    environment:
+      - PORT=3000
+      - SERVER_PORT=3000
+    expose:
+      - "3000"
+    volumes:
+      - ./docker/api/logs:/app/api/logs
+      - ./docker/api/ormlogs.log:/app/api/ormlogs.log
+  nginx:
+    container_name: "nginx"
+    image: /geoparty-server-nginx:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/logs:/app/nginx/logs
+      - ./ssl:/etc/nginx/ssl:ro

@@ -1,19 +1,16 @@
-package com.example.scsa_community2.entity;
+package com.example.scsa_community2.dto.request;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "user_tbl")
-@Getter
-@Setter
 @Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-    @Id
+public class UserSignUpRequest {
     private String userId;
-
     private String userPwd;
     private String userName;
     private Boolean userIsStudent;
@@ -25,13 +22,5 @@ public class User {
     private Boolean userIsCp;
     private Integer userTardyCount;
     private String refreshToken;
-
-    public void updateRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public void resetRefreshToken() {
-        this.refreshToken = null;
-    }
 
 }

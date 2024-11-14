@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 //@DataJpaTest
 //@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("dev")
+//@ActiveProfiles("dev")
 public class UserRepositoryTest {
 
     @Autowired
@@ -84,4 +84,40 @@ public class UserRepositoryTest {
         assertThat(foundUser.getUserPwd()).isNotEqualTo("password123"); // 원래 비밀번호와 다름을 확인
         assertThat(foundUser.getUserPwd()).startsWith("$2a$"); // BCrypt 해시 형식 확인
     }
+
+
+    @Test
+    public void testUserLogOut() {
+        // Given
+        UserSignUpRequest userRequest = UserSignUpRequest.builder()
+                .userId("testUser")
+                .userPwd("password123")
+                .userName("홍길동")
+                .userIsStudent(true)
+                .userCompany("학생")
+                .userDepartment("컴퓨터공학")
+                .userPosition("학생")
+                .userEmail("hong@example.com")
+                .userSemester(1)
+                .userMessage("자기소개")
+                .userSns("snsProfile")
+                .userImg("profile.jpg")
+                .userIsCp(false)
+                .userTardyCount(2)
+                .build();
+
+        userService.saveUser(userRequest);
+        User initialUser = userRepository.findById("testUser").orElse(null);
+        assertThat(initialUser).isNotNull(); // 생성 직후 null이 아님을 확인
+
+        // When: 로그아웃 수행
+        userService.signOut("testUser");
+
+        // Then: 리프레시 토큰이 제거되었는지 확인
+        User foundUser = userRepository.findById("testUser").orElse(null);
+        assertThat(foundUser).isNotNull();
+        assertThat(foundUser.getRefreshToken()).isNull();
+    }
+
+
 }

@@ -70,7 +70,7 @@ public class UserService {
     }
 
     // 유저 정보 찾는 메서드
-    private User getUser(String userId) {
+    public User getUser(String userId) {
         return userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
     }
 

@@ -3,7 +3,9 @@ package com.example.scsa_community2.control;
 import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.request.UserSignUpRequest;
 import com.example.scsa_community2.dto.request.RefreshRequest;
+import com.example.scsa_community2.dto.response.UserDetailResponse;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
+import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.jwt.JWTUtil;
@@ -65,16 +67,49 @@ public class UserControl {
         throw new BaseException(ErrorCode.INVALID_TOKEN);
     }
 
+//    @GetMapping("/profile/{user-id}")
+//    @Operation(description = "유저 정보를 반환한다.")
+//    public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal PrincipalDetails userDetails) {
+//
+//        if (userDetails == null || userDetails.getUser() == null) {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다.");
+//        }
+//
+//
+//
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(userDetails.getUser());
+//    }
+
     @GetMapping("/profile/{user-id}")
     @Operation(description = "유저 정보를 반환한다.")
-    public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal PrincipalDetails userDetails) {
+    public ResponseEntity<UserDetailResponse> getUserInfo(@PathVariable("user-id") String userId,
+                                                          @AuthenticationPrincipal PrincipalDetails userDetails) {
 
         if (userDetails == null || userDetails.getUser() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다.");
         }
+
+        // Assuming `userService` provides a method to retrieve user details by `userId`
+        User user = userService.getUser(userId);
+
+        // Convert the User entity to UserDetailResponse DTO
+        UserDetailResponse userDetailResponse = UserDetailResponse.builder()
+                .userName(user.getUserName())
+                .userSemester(user.getUserSemester())
+                .userCompany(user.getUserCompany())
+                .userDepartment(user.getUserDepartment())
+                .userPosition(user.getUserPosition())
+                .userEmail(user.getUserEmail())
+                .userSns(user.getUserSns())
+                .userMessage(user.getUserMessage())
+                .userImg(user.getUserImg())
+                .build();
+
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userDetails.getUser());
+                .body(userDetailResponse);
     }
+
 
     @PostMapping("/logout")
     @Operation(description = "로그 아웃")

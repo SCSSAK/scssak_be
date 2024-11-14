@@ -1,5 +1,6 @@
 package com.example.scsa_community2.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Builder
@@ -7,6 +8,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserLogInRequest {
-    @NonNull String userId;
-    @NonNull String userPwd;
+    @NonNull
+    @JsonProperty("id")
+    private String userId;
+    @NonNull
+    @JsonProperty("pwd")
+    private String userPwd;
 }

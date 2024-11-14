@@ -24,7 +24,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+//@RequestMapping("/user")
+@RequestMapping("/api/v1/user")
 public class UserControl {
 
     private final UserService userService;
@@ -40,14 +41,14 @@ public class UserControl {
         return ResponseEntity.status(HttpStatus.CREATED).body("유저 등록이 완료되었습니다.");
     }
 
-    @PostMapping("/logIn")
+    @PostMapping("/login")
     @Operation(description = "로그인")
     public ResponseEntity<?> LogIn(@RequestBody UserLogInRequest userRequest ) {
 
-        UserLogInResponse userLogInResponse = userService.logIn(userRequest);
+        UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userLogInResponse);
+                .body(userLogInResponseDto);
     }
 
     @PostMapping("/refresh")
@@ -64,7 +65,7 @@ public class UserControl {
         throw new BaseException(ErrorCode.INVALID_TOKEN);
     }
 
-    @GetMapping("/userInfo")
+    @GetMapping("/profile/{user-id}")
     @Operation(description = "유저 정보를 반환한다.")
     public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal PrincipalDetails userDetails) {
 

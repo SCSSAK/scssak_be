@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -23,6 +25,11 @@ public class SecurityConfig {
 
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final CustomJWTAuthenticationEntryPoint customJwtAuthenticationEntryPoint;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -43,6 +50,8 @@ public class SecurityConfig {
                                 .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**").permitAll()
 //                                .requestMatchers(new AntPathRequestMatcher("/oauth/token")).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/user/login").permitAll() // 로그인 경로 허용
+                                // api 테스트를 위한 임시 허용 (다른 /api 경로에 대한 테스트 필요 시 사용)
                                 .requestMatchers(HttpMethod.GET,"/api/auth/refresh").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                                 // api 테스트를 위한 임시 허용

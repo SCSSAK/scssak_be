@@ -2,6 +2,7 @@ package com.example.scsa_community2.service;
 
 import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.request.UserSignUpRequest;
+import com.example.scsa_community2.dto.response.UserLogInResponse;
 import com.example.scsa_community2.dto.response.UserResponse;
 import com.example.scsa_community2.jwt.Token;
 import com.example.scsa_community2.jwt.JWTUtil;
@@ -9,10 +10,10 @@ import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.jwt.UserAuthentication;
-import com.example.scsa_community2.dto.response.UserLogInResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.scsa_community2.repository.UserRepository;
@@ -28,22 +29,29 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
     // 유저 정보 db에 저장하는 메서드
     public User saveUser(UserSignUpRequest userData) {
 
-        String encryptedPwd = userData.getUserPwd(); // to-do : userData로 받아온 password를 암호화 하는 작업
+//        String encryptedPwd = userData.getUserPwd(); // to-do : userData로 받아온 password를 암호화 하는 작업
+        // 비밀번호를 BCrypt로 암호화
+        String encryptedPwd = passwordEncoder.encode(userData.getUserPwd());
 
         User user = User.builder()
                 .userId(userData.getUserId())
                 .userPwd(encryptedPwd)
                 .userName(userData.getUserName())
                 .userIsStudent(userData.getUserIsStudent())
-                .userJob(userData.getUserJob())
+                .userCompany(userData.getUserCompany())
+                .userDepartment(userData.getUserDepartment())
+                .userPosition(userData.getUserPosition())
+//                .userJob(userData.getUserJob())
                 .userEmail(userData.getUserEmail())
                 .userSemester(userData.getUserSemester())
                 .userMessage(userData.getUserMessage())
                 .userImg(userData.getUserImg())
+                .userSns(userData.getUserSns())
                 .userIsCp(userData.getUserIsCp())
                 .userTardyCount(userData.getUserTardyCount())
                 .build();
@@ -58,7 +66,7 @@ public class UserService {
         // jwt 토큰 생성
         Token token = getToken(user);
 
-        return UserLogInResponse.of(token,UserResponse.from(user));
+        return UserLogInResponse.of(token, UserResponse.from(user));
     }
 
     // 유저 정보 찾는 메서드

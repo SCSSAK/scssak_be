@@ -1,4 +1,4 @@
-package com.example.scsa_community2;
+package com.example.scsa_community2.control;
 
 import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.response.UserLogInResponse;

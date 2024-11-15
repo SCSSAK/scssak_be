@@ -32,7 +32,7 @@ public class User {
     private String userMessage;
     private String userSns;
     private String userImg;
-    private Boolean userIsCp;
+//    private Boolean userIsCp;
     private Integer userTardyCount;
     private String refreshToken;
 

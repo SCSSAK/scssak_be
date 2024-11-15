@@ -83,7 +83,7 @@ public class UserControl {
         // Convert the User entity to UserDetailResponse DTO
         UserDetailResponse userDetailResponse = UserDetailResponse.builder()
                 .userName(user.getUserName())
-                .userSemester(user.getUserSemester())
+                .userSemester(user.getUserSemester().getSemesterId())
                 .userCompany(user.getUserCompany())
                 .userDepartment(user.getUserDepartment())
                 .userPosition(user.getUserPosition())

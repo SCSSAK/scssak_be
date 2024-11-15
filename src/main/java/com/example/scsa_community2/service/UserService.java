@@ -5,13 +5,14 @@ import com.example.scsa_community2.dto.request.UserSignUpRequest;
 import com.example.scsa_community2.dto.request.UserUpdateRequest;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
 import com.example.scsa_community2.dto.response.UserResponse;
-import com.example.scsa_community2.exception.InvalidPasswordException;
+import com.example.scsa_community2.entity.Semester;
 import com.example.scsa_community2.jwt.Token;
 import com.example.scsa_community2.jwt.JWTUtil;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.jwt.UserAuthentication;
+import com.example.scsa_community2.repository.SemesterRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,16 +37,19 @@ public class UserService {
     private static final int REFRESH_TOKEN_EXPIRATION = 1209600000; // 2주
 
     private final UserRepository userRepository;
+    private final SemesterRepository semesterRepository; // SemesterRepository 추가
     private final JWTUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final S3Service s3Service;
 
     // 유저 정보 db에 저장하는 메서드
     public User saveUser(UserSignUpRequest userData) {
-
-//        String encryptedPwd = userData.getUserPwd(); // to-do : userData로 받아온 password를 암호화 하는 작업
         // 비밀번호를 BCrypt로 암호화
         String encryptedPwd = passwordEncoder.encode(userData.getUserPwd());
+
+        // userSemester ID로 Semester 엔티티를 조회
+        Semester semester = semesterRepository.findById(userData.getUserSemester())
+                .orElseThrow(() -> new BaseException(ErrorCode.SEMESTER_NOT_FOUND));
 
         User user = User.builder()
                 .userId(userData.getUserId())
@@ -55,15 +59,15 @@ public class UserService {
                 .userCompany(userData.getUserCompany())
                 .userDepartment(userData.getUserDepartment())
                 .userPosition(userData.getUserPosition())
-//                .userJob(userData.getUserJob())
                 .userEmail(userData.getUserEmail())
-                .userSemester(userData.getUserSemester())
+                .userSemester(semester)  // Semester 엔티티 설정
                 .userMessage(userData.getUserMessage())
                 .userImg(userData.getUserImg())
                 .userSns(userData.getUserSns())
                 .userIsCp(userData.getUserIsCp())
                 .userTardyCount(userData.getUserTardyCount())
                 .build();
+
         return userRepository.save(user);
     }
 
@@ -83,13 +87,12 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // 사용자 정보를 통해  refreshToken을 User에 저장하고 jwt Token을 반환
+    // 사용자 정보를 통해 refreshToken을 User에 저장하고 jwt Token을 반환
     private Token getToken(User user) {
         Token token = generateToken(new UserAuthentication(user.getUserId(), null, null)); // jwt 토큰 생성
         user.updateRefreshToken(token.getRefreshToken()); // 유저 정보에 refresh 토큰 저장
         return token; // access, refresh 토큰 반환
     }
-
 
     // 토큰 객체 생성
     private Token generateToken(Authentication authentication) {
@@ -99,18 +102,16 @@ public class UserService {
                 .build();
     }
 
-
     // access token으로 access token, refresh token 재발급하는 메소드
     @Transactional
     public Token refresh(String refreshToken) {
-
-        String userId = jwtUtil.getUserFromJwt(refreshToken);; //  유저 id 추출
+        String userId = jwtUtil.getUserFromJwt(refreshToken); // 유저 id 추출
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.UNAUTHORIZED)); //유저 정보 추출
+                .orElseThrow(() -> new BaseException(ErrorCode.UNAUTHORIZED)); // 유저 정보 추출
         String realRefreshToken = user.getRefreshToken(); // 저장된 refreshToken 가지고 오기
 
         // 저장된 리프레시 토큰이 유효하지 않다면 401 에러
-        if (realRefreshToken == null ||!jwtUtil.validateToken(realRefreshToken).equals(VALID_JWT)) {
+        if (realRefreshToken == null || !jwtUtil.validateToken(realRefreshToken).equals(VALID_JWT)) {
             throw new BaseException(ErrorCode.INVALID_TOKEN);
         }
 
@@ -118,13 +119,13 @@ public class UserService {
         if (!jwtUtil.validateToken(realRefreshToken).equals(VALID_JWT)) {
             throw new BaseException(ErrorCode.INVALID_TOKEN);
         }
+
         // access Token 이 유효하면 엑세스 토큰, 리프레시 토큰 새로 생성 해서 반환
-        return getToken(user); // Token 재생성 및 user 리프레시 토큰 컬럼에 저장한다.
+        return getToken(user); // Token 재생성 및 user 리프레시 토큰 컬럼에 저장
     }
 
-    //리프레시 토큰 담긴 쿠키 만료 시키기
+    // 리프레시 토큰 담긴 쿠키 만료 시키기
     public String setHttpOnlyCookieInvalidate(String cookieName) {
-
         ResponseCookie cookie = ResponseCookie.from(cookieName, null)
                 .path("/")
                 .sameSite("None")

@@ -38,7 +38,7 @@ public class UserResponse {
                 .userPosition(user.getUserPosition())
 //                .userJob(user.getUserJob())
                 .userEmail(user.getUserEmail())
-                .userSemester(user.getUserSemester())
+                .userSemester(user.getUserSemester().getSemesterId())
                 .userMessage(user.getUserMessage())
                 .userSns(user.getUserSns())
                 .userImg(user.getUserImg())

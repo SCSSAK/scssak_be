@@ -14,6 +14,13 @@ public class User {
     @Id
     private String userId;
 
+    @ManyToOne
+    @JoinColumn(name = "user_semester")  // Semester 테이블의 semesterId를 외래 키로 참조
+    private Semester userSemester;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Attendance attendance;
+
     private String userPwd;
     private String userName;
     private Boolean userIsStudent;
@@ -21,7 +28,7 @@ public class User {
     private String userDepartment;
     private String userPosition;
     private String userEmail;
-    private Integer userSemester;
+//    private Integer userSemester;
     private String userMessage;
     private String userSns;
     private String userImg;

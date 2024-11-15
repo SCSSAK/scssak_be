@@ -3,6 +3,7 @@ package com.example.scsa_community2.control;
 import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.request.UserSignUpRequest;
 import com.example.scsa_community2.dto.request.RefreshRequest;
+import com.example.scsa_community2.dto.request.UserUpdateRequest;
 import com.example.scsa_community2.dto.response.UserDetailResponse;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
 import com.example.scsa_community2.entity.User;
@@ -36,7 +37,7 @@ public class UserControl {
     // 직접 db에 유저 정보 넣기 위한 controller
     @PostMapping("/signUp")
     @Operation(description = "유저를 등록 한다")
-    public ResponseEntity<?> SignUp(@RequestBody UserSignUpRequest userSingUpRequest ) {
+    public ResponseEntity<?> SignUp(@RequestBody UserSignUpRequest userSingUpRequest) {
 
         userService.saveUser(userSingUpRequest);
 
@@ -45,7 +46,7 @@ public class UserControl {
 
     @PostMapping("/login")
     @Operation(description = "로그인")
-    public ResponseEntity<?> LogIn(@RequestBody UserLogInRequest userRequest ) {
+    public ResponseEntity<?> LogIn(@RequestBody UserLogInRequest userRequest) {
 
         UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
 
@@ -66,20 +67,6 @@ public class UserControl {
         }
         throw new BaseException(ErrorCode.INVALID_TOKEN);
     }
-
-//    @GetMapping("/profile/{user-id}")
-//    @Operation(description = "유저 정보를 반환한다.")
-//    public ResponseEntity<?> getUserInfo(@AuthenticationPrincipal PrincipalDetails userDetails) {
-//
-//        if (userDetails == null || userDetails.getUser() == null) {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다.");
-//        }
-//
-//
-//
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(userDetails.getUser());
-//    }
 
     @GetMapping("/profile/{user-id}")
     @Operation(description = "유저 정보를 반환한다.")
@@ -116,7 +103,7 @@ public class UserControl {
     public ResponseEntity<?> signOut(@AuthenticationPrincipal PrincipalDetails userDetails) {
 
         // 액세스 토큰이 있다면
-        if(userDetails != null){
+        if (userDetails != null) {
             String userId = userDetails.getUser().getUserId();
             userService.signOut(userId);
         }
@@ -125,8 +112,22 @@ public class UserControl {
         String cookie = userService.setHttpOnlyCookieInvalidate("refreshToken");
 
         return ResponseEntity.ok()
-                .header("Set-Cookie" , cookie)
+                .header("Set-Cookie", cookie)
                 .build();
+    }
+
+    @PutMapping("/profile")
+    @Operation(description = "유저 페이지 수정")
+    public ResponseEntity<Void> updateUserProfile(@ModelAttribute UserUpdateRequest userUpdateRequest,
+                                                  @AuthenticationPrincipal PrincipalDetails userDetails) {
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.info("Received user update request: {}", userUpdateRequest);
+        String userId = userDetails.getUser().getUserId();
+
+        return userService.updateUserProfile(userId, userUpdateRequest);
     }
 
 

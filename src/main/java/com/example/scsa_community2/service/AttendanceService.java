@@ -1,9 +1,12 @@
 package com.example.scsa_community2.service;
 
+import com.example.scsa_community2.dto.response.MainPageInfo;
 import com.example.scsa_community2.entity.Attendance;
+import com.example.scsa_community2.entity.Notice;
 import com.example.scsa_community2.entity.Semester;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.repository.AttendanceRepository;
+import com.example.scsa_community2.repository.NoticeRepository;
 import com.example.scsa_community2.repository.SemesterRepository;
 import com.example.scsa_community2.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,6 +29,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
     private final SemesterRepository semesterRepository;
+    private final NoticeRepository noticeRepository;
 
     public ResponseEntity<Void> markAttendance(String userId) {
         try {
@@ -79,6 +85,45 @@ public class AttendanceService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500: 서버 오류
         }
     }
+
+    public MainPageInfo getMainPageInfo(String userId) {
+        try {
+            // 유저 확인
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // 현재 학기 확인 (반장이 속한 기수)
+            Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
+                    .orElseThrow(() -> new RuntimeException("No active semester found"));
+
+            // 지각자 명단: 출석하지 않은 전체 사용자
+            List<String> absentList = userRepository.findUsersBySemesterCpId(currentSemester.getSemesterCpId())
+                    .stream()
+                    .filter(absentUser -> !attendanceRepository.existsByUserId(absentUser.getUserId())) // 출석하지 않은 사람
+                    .map(User::getUserName)
+                    .collect(Collectors.toList());
+
+            // 공지사항 리스트: 전체 공지사항 (제한 없음)
+            List<String> noticeList = noticeRepository.findByNoticeSemester_SemesterId(currentSemester.getSemesterId())
+                    .stream()
+                    .map(Notice::getNoticeContent)
+                    .collect(Collectors.toList());
+
+            // MainPageInfo DTO 생성
+            return MainPageInfo.builder()
+                    .userTardyCount(user.getUserTardyCount())
+                    .tardyPenalty(user.getUserTardyCount() * 10000)
+                    .absentList(absentList) // 전체 지각자 명단
+                    .noticeList(noticeList) // 공지사항 전체
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error while fetching main page info: {}", e.getMessage());
+            throw new RuntimeException("Error fetching main page info");
+        }
+    }
+
+
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     public void resetAttendance() {

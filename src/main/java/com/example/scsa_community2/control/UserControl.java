@@ -4,6 +4,7 @@ import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.request.UserSignUpRequest;
 import com.example.scsa_community2.dto.request.RefreshRequest;
 import com.example.scsa_community2.dto.request.UserUpdateRequest;
+import com.example.scsa_community2.dto.response.MainPageInfo;
 import com.example.scsa_community2.dto.response.UserDetailResponse;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
 import com.example.scsa_community2.entity.User;
@@ -141,6 +142,20 @@ public class UserControl {
 
         String userId = userDetails.getUser().getUserId();
         return attendanceService.markAttendance(userId); // AttendanceService 호출
+    }
+
+
+    @GetMapping("/main")
+    @Operation(description = "Retrieves the main page information.")
+    public ResponseEntity<MainPageInfo> getMainPage(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        }
+
+        String userId = userDetails.getUser().getUserId();
+        MainPageInfo mainPageInfo = attendanceService.getMainPageInfo(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(mainPageInfo);
     }
 
 

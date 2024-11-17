@@ -81,5 +81,29 @@ public class MailControl {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
         }
     }
+
+    @DeleteMapping("/{mail_id}")
+    @Operation(description = "Deletes a mail if the requester is the sender.")
+    public ResponseEntity<Void> deleteMail(
+            @PathVariable("mail_id") Long mailId,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        }
+
+        String senderId = userDetails.getUser().getUserId();
+        try {
+            mailService.deleteMail(mailId, senderId);
+            return ResponseEntity.ok().build(); // 200
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+        } catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+        }
+    }
+
 }
 

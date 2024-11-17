@@ -107,5 +107,19 @@ public class MailService {
         // 응답 생성
         return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
     }
+
+    public void deleteMail(Long mailId, String senderId) {
+        // 메일 확인
+        Mail mail = mailRepository.findById(mailId)
+                .orElseThrow(() -> new EntityNotFoundException("Mail not found"));
+
+        // 송신자 확인
+        if (!mail.getSender().getUserId().equals(senderId)) {
+            throw new UnauthorizedAccessException("You are not the sender of this mail");
+        }
+
+        // 메일 삭제
+        mailRepository.delete(mail);
+    }
 }
 

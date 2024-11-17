@@ -13,6 +13,7 @@ import com.example.scsa_community2.jwt.JWTUtil;
 import com.example.scsa_community2.jwt.JWTValType;
 import com.example.scsa_community2.jwt.Token;
 import com.example.scsa_community2.jwt.PrincipalDetails;
+import com.example.scsa_community2.service.AttendanceService;
 import com.example.scsa_community2.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserControl {
 
     private final UserService userService;
+    private final AttendanceService attendanceService;
     private final JWTUtil jwtUtil;
 
     // 직접 db에 유저 정보 넣기 위한 controller
@@ -129,6 +131,18 @@ public class UserControl {
 
         return userService.updateUserProfile(userId, userUpdateRequest);
     }
+
+    @PostMapping("/attend") // 명세서에 따른 출석 API 경로
+    @Operation(description = "Marks the user's attendance for the day.")
+    public ResponseEntity<Void> markAttendance(@AuthenticationPrincipal PrincipalDetails userDetails) {
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401: 인증되지 않은 사용자
+        }
+
+        String userId = userDetails.getUser().getUserId();
+        return attendanceService.markAttendance(userId); // AttendanceService 호출
+    }
+
 
 
 }

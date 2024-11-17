@@ -1,10 +1,15 @@
 package com.example.scsa_community2.service;
 
+import com.example.scsa_community2.dto.request.MailRequest;
 import com.example.scsa_community2.dto.response.MailResponse;
 import com.example.scsa_community2.dto.response.UserMailInfo;
+import com.example.scsa_community2.entity.Mail;
 import com.example.scsa_community2.entity.User;
+import com.example.scsa_community2.exception.EntityNotFoundException;
+import com.example.scsa_community2.exception.UnauthorizedAccessException;
 import com.example.scsa_community2.repository.MailRepository;
 import com.example.scsa_community2.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +46,35 @@ public class MailService {
 
         // 응답 생성
         return new MailResponse(semester, userMailInfos);
+    }
+
+    public void sendMail(String senderId, MailRequest mailRequest) {
+        // 메일 내용 확인
+        if (mailRequest.getMailContent() == null || mailRequest.getMailContent().trim().isEmpty()) {
+            throw new IllegalArgumentException("Mail content cannot be empty");
+        }
+
+        // 송신자 확인
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+
+        // 수신자 확인
+        User receiver = userRepository.findById(mailRequest.getReceiverId())
+                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+
+        // 같은 학기인지 확인
+        if (!sender.getUserSemester().getSemesterId().equals(receiver.getUserSemester().getSemesterId())) {
+            throw new UnauthorizedAccessException("Receiver is in a different semester");
+        }
+
+        // 메일 저장
+        Mail mail = new Mail();
+        mail.setSender(sender);
+        mail.setReceiver(receiver);
+        mail.setMailContent(mailRequest.getMailContent());
+        mail.setMailCreatedAt(LocalDateTime.now());
+
+        mailRepository.save(mail);
     }
 }
 

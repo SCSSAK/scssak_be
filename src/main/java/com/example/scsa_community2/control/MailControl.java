@@ -1,6 +1,7 @@
 package com.example.scsa_community2.control;
 
 import com.example.scsa_community2.dto.request.MailRequest;
+import com.example.scsa_community2.dto.response.MailListResponse;
 import com.example.scsa_community2.dto.response.MailResponse;
 import com.example.scsa_community2.exception.EntityNotFoundException;
 import com.example.scsa_community2.exception.UnauthorizedAccessException;
@@ -49,6 +50,29 @@ public class MailControl {
             return ResponseEntity.ok().build(); // 200
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400
+        } catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+        }
+    }
+
+    @GetMapping("/{user_id}")
+    @Operation(description = "Retrieves the list of mails received by a specific user.")
+    public ResponseEntity<MailListResponse> getMailList(
+            @PathVariable("user_id") String userId,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        }
+
+        String requestorId = userDetails.getUser().getUserId();
+        try {
+            MailListResponse response = mailService.getMailList(requestorId, userId);
+            return ResponseEntity.ok(response); // 200
         } catch (UnauthorizedAccessException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
         } catch (EntityNotFoundException e) {

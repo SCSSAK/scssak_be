@@ -1,6 +1,7 @@
 package com.example.scsa_community2.service;
 
 import com.example.scsa_community2.dto.request.MailRequest;
+import com.example.scsa_community2.dto.response.MailListResponse;
 import com.example.scsa_community2.dto.response.MailResponse;
 import com.example.scsa_community2.dto.response.UserMailInfo;
 import com.example.scsa_community2.entity.Mail;
@@ -75,6 +76,36 @@ public class MailService {
         mail.setMailCreatedAt(LocalDateTime.now());
 
         mailRepository.save(mail);
+    }
+
+
+    public MailListResponse getMailList(String requestorId, String receiverId) {
+        // 요청자와 수신자 확인
+        User requestor = userRepository.findById(requestorId)
+                .orElseThrow(() -> new EntityNotFoundException("Requestor not found"));
+
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+
+        // 같은 학기인지 확인
+        if (!requestor.getUserSemester().getSemesterId().equals(receiver.getUserSemester().getSemesterId())) {
+            throw new UnauthorizedAccessException("Receiver is in a different semester");
+        }
+
+        // 수신된 메일 목록 조회
+        List<Mail> mails = mailRepository.findByReceiver_UserId(receiverId);
+
+        // DTO 변환
+        List<MailListResponse.MailDetail> mailDetails = mails.stream()
+                .map(mail -> new MailListResponse.MailDetail(
+                        mail.getMailId(),
+                        mail.getMailContent(),
+                        mail.getMailCreatedAt().toLocalDate().toString() // 날짜 형식 변환
+                ))
+                .collect(Collectors.toList());
+
+        // 응답 생성
+        return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
     }
 }
 

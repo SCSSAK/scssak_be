@@ -3,6 +3,8 @@ package com.example.scsa_community2.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "mail_tbl")
 @Getter
@@ -23,5 +25,5 @@ public class Mail {
     private User receiver;
 
     private String mailContent;
-    private java.sql.Date mailCreatedAt;
+    private LocalDateTime mailCreatedAt;
 }

@@ -14,4 +14,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findById(String userId);
     @Query("SELECT u FROM User u WHERE u.userSemester.semesterCpId = :cpId")
     List<User> findUsersBySemesterCpId(@Param("cpId") String cpId);
+    @Query("SELECT u FROM User u WHERE u.userSemester.semesterId = :semesterId")
+    List<User> findUsersBySemesterId(@Param("semesterId") Integer semesterId);
+
 }

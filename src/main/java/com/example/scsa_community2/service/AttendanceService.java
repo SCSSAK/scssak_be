@@ -125,9 +125,14 @@ public class AttendanceService {
 
 
 
-    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
     public void resetAttendance() {
         log.info("Resetting attendance table...");
-        attendanceRepository.deleteAll();
+        try {
+            attendanceRepository.deleteAll();
+            log.info("Attendance table successfully cleared.");
+        } catch (Exception e) {
+            log.error("Error while clearing attendance table: {}", e.getMessage());
+        }
     }
 }

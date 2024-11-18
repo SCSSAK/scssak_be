@@ -3,6 +3,8 @@ package com.example.scsa_community2.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "comment_tbl")
 @Getter
@@ -26,5 +28,5 @@ public class Comment {
     private User user;
 
     private String commentContent;
-    private java.sql.Date commentCreatedAt;
+    private LocalDateTime commentCreatedAt;
 }

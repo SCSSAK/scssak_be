@@ -4,9 +4,9 @@ import java.util.List;
 
 public class ArticleListResponse {
     private int totalPage;
-    private List<ArticleResponse> articleList;
+    private List<ArticleDetailResponse> articleList;
 
-    public ArticleListResponse(int totalPage, List<ArticleResponse> articleList) {
+    public ArticleListResponse(int totalPage, List<ArticleDetailResponse> articleList) {
         this.totalPage = totalPage;
         this.articleList = articleList;
     }
@@ -19,11 +19,11 @@ public class ArticleListResponse {
         this.totalPage = totalPage;
     }
 
-    public List<ArticleResponse> getArticleList() {
+    public List<ArticleDetailResponse> getArticleList() {
         return articleList;
     }
 
-    public void setArticleList(List<ArticleResponse> articleList) {
+    public void setArticleList(List<ArticleDetailResponse> articleList) {
         this.articleList = articleList;
     }
 }

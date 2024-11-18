@@ -1,9 +1,10 @@
 package com.example.scsa_community2.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+//import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.core.sync.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class S3Service {
 
     private final S3Client s3Client;
-    private final String bucketName = "your-bucket-name"; // 버킷 이름 설정
+    @Value("${cloud.aws.s3.bucket}") // application.properties의 S3_BUCKET 값 주입
+    private String bucketName;
 
     public S3Service(S3Client s3Client) {
         this.s3Client = s3Client;

@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -51,11 +52,11 @@ public class AttendanceService {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400: 이미 출석
             }
 
-            // 반장이 속한 학기 가져오기
+            // 학기 정보 가져오기
             Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
                     .orElseThrow(() -> new RuntimeException("No active semester found"));
 
-            // 학기별 지각 시간 가져오기
+            // 지각 기준 시간 확인
             LocalTime tardyTime = currentSemester.getSemesterTardyTime();
             if (tardyTime == null) {
                 throw new RuntimeException("Tardy time is not set for the semester.");
@@ -65,21 +66,23 @@ public class AttendanceService {
 
             // 출석 데이터 생성
             Attendance attendance = new Attendance();
-            attendance.setUser(user); // User 엔티티 설정
+            attendance.setUser(user);
             attendance.setAttendanceTime(now);
 
-            // 지각 여부 판단
-            if (now.toLocalTime().isBefore(tardyTime)) {
-                log.info("User {} is on time.", userId);
-            } else {
+            // 지각 여부 확인 및 처리
+            if (now.toLocalTime().isAfter(tardyTime)) {
                 log.info("User {} is late.", userId);
+                user.setUserTardyCount(user.getUserTardyCount() + 1); // 지각 횟수 증가
+                userRepository.save(user); // 유저 데이터 저장
+            } else {
+                log.info("User {} is on time.", userId);
             }
 
-            // DB에 저장
+            // 출석 데이터 저장
             attendanceRepository.save(attendance);
+
             log.info("Attendance marked successfully for user {}.", userId);
             return ResponseEntity.status(HttpStatus.OK).build(); // 200: 성공
-
         } catch (Exception e) {
             log.error("Error while marking attendance for user {}: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500: 서버 오류
@@ -87,40 +90,73 @@ public class AttendanceService {
     }
 
 
+
     public MainPageInfo getMainPageInfo(String userId) {
         try {
+            // 사용자 확인
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            // 현재 학기 확인
             Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
                     .orElseThrow(() -> new RuntimeException("No active semester found"));
 
-            // 벌금 계산 로직
+            // 학기 지각 벌금
             int penaltyPerTardy = currentSemester.getSemesterTardyPenalty();
-//            int totalPenalty = user.getUserTardyCount() * penaltyPerTardy;
 
-            List<String> absentList = userRepository.findUsersBySemesterCpId(currentSemester.getSemesterCpId())
-                    .stream()
-                    .filter(absentUser -> !attendanceRepository.existsByUserId(absentUser.getUserId()))
-                    .map(User::getUserName)
-                    .collect(Collectors.toList());
+            // 학기의 지각 기준 시간
+            LocalTime tardyTime = currentSemester.getSemesterTardyTime();
+            if (tardyTime == null) {
+                throw new RuntimeException("Tardy time is not set for the semester.");
+            }
 
+            // 오늘 날짜 가져오기
+            LocalDate today = LocalDate.now();
+
+//            // 오늘 출석한 유저 리스트 가져오기
+//            List<Attendance> todayAttendances = attendanceRepository.findAll().stream()
+//                    .filter(attendance -> attendance.getAttendanceTime().toLocalDate().isEqual(today))
+//                    .toList();
+//
+//            // 시간 내에 출석한 유저 리스트 생성
+//            List<String> onTimeUsers = todayAttendances.stream()
+//                    .filter(attendance -> attendance.getAttendanceTime().toLocalTime().isBefore(tardyTime))
+//                    .map(attendance -> attendance.getUser().getUserId())
+//                    .toList();
+
+            List<String> onTimeUsers = attendanceRepository.findAll().stream()
+                    .filter(attendance -> attendance.getAttendanceTime().toLocalDate().isEqual(today) // 오늘 출석한 유저만
+                            && attendance.getAttendanceTime().toLocalTime().isBefore(tardyTime))    // 지각 시간 이전에 출석한 유저만
+                    .map(attendance -> attendance.getUser().getUserId())                           // 유저 ID 추출
+                    .toList();
+
+
+            // 전체 유저에서 시간 내 출석자를 제외한 리스트 생성
+            List<String> lateUsers = userRepository.findAll().stream()
+                    .map(User::getUserId)
+                    .filter(userIdInList -> !onTimeUsers.contains(userIdInList)) // 시간 내 출석자를 제외
+                    .map(userIdInList -> userRepository.findById(userIdInList).get().getUserName()) // 이름으로 변환
+                    .toList();
+
+            // 공지사항 리스트 가져오기
             List<String> noticeList = noticeRepository.findByNoticeSemester_SemesterId(currentSemester.getSemesterId())
                     .stream()
                     .map(Notice::getNoticeContent)
                     .collect(Collectors.toList());
 
             return MainPageInfo.builder()
-                    .userTardyCount(user.getUserTardyCount())
-//                    .tardyPenalty(totalPenalty) // 계산된 벌금 전달
-                    .absentList(absentList)
-                    .noticeList(noticeList)
+                    .userTardyCount(user.getUserTardyCount()) // 사용자의 지각 횟수
+                    .tardyPenalty(penaltyPerTardy)           // 학기별 지각 벌금
+                    .absentList(lateUsers)                   // 출석하지 않거나 지각한 유저 리스트
+                    .noticeList(noticeList)                  // 공지사항 리스트
                     .build();
         } catch (Exception e) {
             log.error("Error while fetching main page info: {}", e.getMessage());
             throw new RuntimeException("Error fetching main page info");
         }
     }
+
+
 
 
 

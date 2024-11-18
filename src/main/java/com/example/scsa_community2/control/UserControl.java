@@ -53,6 +53,9 @@ public class UserControl {
 
         UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
 
+
+
+
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userLogInResponseDto);
     }

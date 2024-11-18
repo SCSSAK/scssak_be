@@ -76,11 +76,19 @@ public class UserService {
         // 유저 찾기
         User user = getUser(userLogInReq.getUserId());
 
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(userLogInReq.getUserPwd(), user.getUserPwd())) {
+            logger.warn("로그인 시도 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
+            throw new BaseException(ErrorCode.INVALID_PASSWORD);
+        }
+
+
         // jwt 토큰 생성
         Token token = getToken(user);
 
         return UserLogInResponse.of(token, UserResponse.from(user));
     }
+
 
     // 유저 정보 찾는 메서드
     public User getUser(String userId) {

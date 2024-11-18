@@ -2,11 +2,12 @@ package com.example.scsa_community2.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @RequiredArgsConstructor
 @Getter
 public enum ErrorCode {
-
+    INVALID_PASSWORD(401, "Invalid password."),
     BAD_REQUEST(400, "잘못된 요청입니다."),
     UNAUTHORIZED(401,"잘못된 토큰입니다."),
     INVALID_TOKEN(401, "토큰이 유효하지 않습니다."),

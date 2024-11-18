@@ -1,13 +1,18 @@
 package com.example.scsa_community2.control;
 
+import com.example.scsa_community2.dto.request.ArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleListResponse;
 import com.example.scsa_community2.dto.response.ArticleResponse;
 import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.User;
+import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.UserRepository;
+import com.example.scsa_community2.service.ArticleService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,63 +36,107 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ArticleControl {
 
+    Logger logger = LoggerFactory.getLogger(ArticleControl.class);
+
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
+    private final ArticleService articleService;
+
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<Void> createArticle(
+//            @RequestParam("articleTitle") String articleTitle,
+//            @RequestParam("articleContent") String articleContent,
+//            @RequestParam("articleType") int articleType,
+//            @RequestParam("articleIsOpen") boolean articleIsOpen,
+//            @RequestParam(value = "images", required = false) List<MultipartFile> images) throws Exception {
+//
+//        // 로그인된 사용자 정보 가져오기
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (authentication == null || !authentication.isAuthenticated()) {
+//            throw new Exception("Unauthorized");
+//        }
+//
+//        // 현재 로그인된 사용자 가져오기
+//        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+//        String userId = principalDetails.getUser().getUserId();
+//        System.out.println(userId);
+//        User currentUser = userRepository.findById(userId)
+//                .orElseThrow(() -> new Exception("User not found"));
+//
+//        // 제목과 내용 유효성 검사
+//        if (articleTitle.isEmpty() || articleContent.isEmpty()) {
+//            throw new Exception("InvalidInput");
+//        }
+//
+//        // Article 엔티티 생성
+//        Article article = new Article();
+//        article.setArticleTitle(articleTitle);
+//        article.setArticleContent(articleContent);
+//        article.setArticleType(articleType);
+//        article.setArticleIsOpen(articleIsOpen);
+//        article.setArticleCreatedAt(Date.valueOf(LocalDate.now()));
+//        article.setUser(currentUser);
+//
+//        // 게시글 저장
+//        articleRepository.save(article);
+//
+//        // 파일 처리 (필요한 경우)
+//        if (images != null && !images.isEmpty()) {
+//            for (MultipartFile image : images) {
+//                // 파일 저장 로직 추가
+//            }
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).build();  // 201 Created 응답
+//    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createArticle(
-            @RequestParam("articleTitle") String articleTitle,
-            @RequestParam("articleContent") String articleContent,
-            @RequestParam("articleType") int articleType,
-            @RequestParam("articleIsOpen") boolean articleIsOpen,
-            @RequestParam(value = "images", required = false) List<MultipartFile> images) throws Exception {
+            @ModelAttribute ArticleRequest request,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
 
-        // 로그인된 사용자 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new Exception("Unauthorized");
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
         }
 
-        // 현재 로그인된 사용자 가져오기
-        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-        String userId = principalDetails.getUser().getUserId();
-        System.out.println(userId);
-        User currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        // 제목과 내용 유효성 검사
-        if (articleTitle.isEmpty() || articleContent.isEmpty()) {
-            throw new Exception("InvalidInput");
+        try {
+            articleService.createArticle(request, userDetails.getUser());
+            return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
+        } catch (BaseException e) {
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
-
-        // Article 엔티티 생성
-        Article article = new Article();
-        article.setArticleTitle(articleTitle);
-        article.setArticleContent(articleContent);
-        article.setArticleType(articleType);
-        article.setArticleIsOpen(articleIsOpen);
-        article.setArticleCreatedAt(Date.valueOf(LocalDate.now()));
-        article.setUser(currentUser);
-
-        // 게시글 저장
-        articleRepository.save(article);
-
-        // 파일 처리 (필요한 경우)
-        if (images != null && !images.isEmpty()) {
-            for (MultipartFile image : images) {
-                // 파일 저장 로직 추가
-            }
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();  // 201 Created 응답
     }
+
+
+
+//    @GetMapping("/{articleId}")
+//    public ResponseEntity<Article> getArticleById(@PathVariable("articleId") Long articleId) throws Exception {
+//        Article article = articleRepository.findById(articleId)
+//                .orElseThrow(() -> new Exception("Article not found"));
+//        return ResponseEntity.ok(article);  // 200 OK 응답
+//    }
 
     @GetMapping("/{articleId}")
-    public ResponseEntity<Article> getArticleById(@PathVariable("articleId") Long articleId) throws Exception {
-        Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new Exception("Article not found"));
-        return ResponseEntity.ok(article);  // 200 OK 응답
+    public ResponseEntity<?> getArticleById(
+            @PathVariable("articleId") Long articleId,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+        }
+
+        try {
+            ArticleResponse articleResponse = articleService.getArticleById(articleId, userDetails.getUser());
+            return ResponseEntity.status(HttpStatus.OK).body(articleResponse); // 200 OK
+        } catch (BaseException e) {
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+        }
     }
+
 
     @PutMapping("/{articleId}")
     public ResponseEntity<Void> updateArticle(

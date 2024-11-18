@@ -7,19 +7,31 @@ import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ArticleRequest {
 
-    private String articleTitle;
-    private String articleContent;
-    private int articleType;
-    private boolean articleIsOpen;
-    private String userId;  // 사용자 ID
+    private String article_title; // snake_case
+    private String article_content; // snake_case
+    private int article_type; // snake_case
+    private boolean article_is_open; // snake_case
     private List<MultipartFile> images;
 
-    // 생성자나 추가적인 필드가 필요할 수 있음
+    public String getArticleTitle() {
+        return article_title;
+    }
+
+    public String getArticleContent() {
+        return article_content;
+    }
+
+    public int getArticleType() {
+        return article_type;
+    }
+
+    public boolean isArticleIsOpen() {
+        return article_is_open;
+    }
 }

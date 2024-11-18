@@ -24,7 +24,7 @@ public class UserResponse {
     private Integer userSemester;
     private String userMessage;
     private String userImg;
-    private Boolean userIsCp;
+//    private Boolean userIsCp;
     private Integer userTardyCount;
     private String refreshToken;
 
@@ -42,7 +42,7 @@ public class UserResponse {
                 .userMessage(user.getUserMessage())
                 .userSns(user.getUserSns())
                 .userImg(user.getUserImg())
-                .userIsCp(user.getUserIsCp())
+//                .userIsCp(user.getUserIsCp())
                 .userTardyCount(user.getUserTardyCount())
                 .build();
     }

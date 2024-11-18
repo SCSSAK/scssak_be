@@ -64,7 +64,7 @@ public class UserService {
                 .userMessage(userData.getUserMessage())
                 .userImg(userData.getUserImg())
                 .userSns(userData.getUserSns())
-                .userIsCp(userData.getUserIsCp())
+//                .userIsCp(userData.getUserIsCp())
                 .userTardyCount(userData.getUserTardyCount())
                 .build();
 

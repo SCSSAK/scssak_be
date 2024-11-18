@@ -131,7 +131,11 @@ public class AttendanceService {
     public void resetAttendance() {
         log.info("Resetting attendance table...");
         try {
-            attendanceRepository.deleteAll();
+//            attendanceRepository.deleteAll();
+//            attendanceRepository.deleteWithSafeUpdateDisabled();
+            attendanceRepository.disableSafeUpdates();
+            attendanceRepository.deleteRows();
+            attendanceRepository.enableSafeUpdates();
             log.info("Attendance table successfully cleared.");
         } catch (Exception e) {
             log.error("Error while clearing attendance table: {}", e.getMessage());

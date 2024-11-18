@@ -49,13 +49,19 @@ public class UserControl {
 
     @PostMapping("/login")
     @Operation(description = "로그인")
-    public ResponseEntity<?> LogIn(@RequestBody UserLogInRequest userRequest) {
-
-        UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
-
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(userLogInResponseDto);
+    public ResponseEntity<?> logIn(@RequestBody UserLogInRequest userRequest) {
+        try {
+            UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(userLogInResponseDto); // 성공 시 200
+        } catch (BaseException e) {
+            if (e.getErrorCode() == ErrorCode.INVALID_PASSWORD) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 비밀번호 불일치 시 401
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 서버 오류 시 500
+            }
+        }
     }
+
 
     @PostMapping("/refresh")
     @Operation(description = "리프레시 토큰으로 엑세스 토큰을 재발급 받는다.")

@@ -78,16 +78,17 @@ public class UserService {
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(userLogInReq.getUserPwd(), user.getUserPwd())) {
-            logger.warn("로그인 시도 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
-            throw new BaseException(ErrorCode.INVALID_PASSWORD);
+            logger.warn("로그인 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
+            throw new BaseException(ErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외
         }
 
-
-        // jwt 토큰 생성
+        // JWT 토큰 생성
         Token token = getToken(user);
 
+        // 응답 DTO 반환
         return UserLogInResponse.of(token, UserResponse.from(user));
     }
+
 
 
     // 유저 정보 찾는 메서드

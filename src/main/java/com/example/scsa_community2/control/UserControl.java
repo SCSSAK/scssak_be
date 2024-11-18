@@ -54,11 +54,11 @@ public class UserControl {
             UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
             return ResponseEntity.status(HttpStatus.OK).body(userLogInResponseDto); // 성공 시 200
         } catch (BaseException e) {
-            if (e.getErrorCode() == ErrorCode.INVALID_PASSWORD) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 비밀번호 불일치 시 401
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 서버 오류 시 500
-            }
+            // 모든 BaseException의 경우 401 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            // 예상치 못한 예외는 서버 오류로 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -163,7 +163,6 @@ public class UserControl {
 
         return ResponseEntity.status(HttpStatus.OK).body(mainPageInfo);
     }
-
 
 
 }

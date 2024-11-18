@@ -73,13 +73,24 @@ public class UserService {
 
     @Transactional
     public UserLogInResponse logIn(UserLogInRequest userLogInReq) {
+        // 유저 ID와 비밀번호 유효성 검증
+        if (userLogInReq.getUserId() == null || userLogInReq.getUserId().isEmpty()) {
+            logger.warn("로그인 실패: userId가 입력되지 않았습니다.");
+            throw new BaseException(ErrorCode.INVALID_INPUT); // 400 Bad Request
+        }
+
+        if (userLogInReq.getUserPwd() == null || userLogInReq.getUserPwd().isEmpty()) {
+            logger.warn("로그인 실패: 비밀번호가 입력되지 않았습니다.");
+            throw new BaseException(ErrorCode.INVALID_INPUT); // 400 Bad Request
+        }
+
         // 유저 찾기
         User user = getUser(userLogInReq.getUserId());
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(userLogInReq.getUserPwd(), user.getUserPwd())) {
             logger.warn("로그인 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
-            throw new BaseException(ErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외
+            throw new BaseException(ErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외 (401 Unauthorized)
         }
 
         // JWT 토큰 생성
@@ -88,6 +99,7 @@ public class UserService {
         // 응답 DTO 반환
         return UserLogInResponse.of(token, UserResponse.from(user));
     }
+
 
 
 
@@ -159,43 +171,30 @@ public class UserService {
         try {
             logger.info("user_pwd_current: {}", userUpdateRequest.getUser_pwd_current());
 
+            // 유저 정보 조회
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
             // 현재 비밀번호 검증
-            if (userUpdateRequest.getUser_pwd_current() == null) {
-                logger.warn("현재 비밀번호가 입력되지 않았습니다.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            if (!isValidCurrentPassword(user, userUpdateRequest.getUser_pwd_current())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
             }
 
-            if (!passwordEncoder.matches(userUpdateRequest.getUser_pwd_current(), user.getUserPwd())) {
-                logger.warn("현재 비밀번호가 일치하지 않습니다.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            // 새 비밀번호와 확인 비밀번호가 일치하는지 검증
-            if (userUpdateRequest.getUser_pwd_new() != null &&
-                    !userUpdateRequest.getUser_pwd_new().equals(userUpdateRequest.getUser_pwd_new_check())) {
-                logger.warn("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-
-            // 새로운 비밀번호 설정
-            if (userUpdateRequest.getUser_pwd_new() != null) {
-                user.setUserPwd(passwordEncoder.encode(userUpdateRequest.getUser_pwd_new()));
+            // 새 비밀번호 설정
+            if (!updatePassword(user, userUpdateRequest)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400
             }
 
             // 기타 유저 정보 업데이트
-            user.setUserCompany(userUpdateRequest.getUser_company());
-            user.setUserDepartment(userUpdateRequest.getUser_department());
-            user.setUserPosition(userUpdateRequest.getUser_position());
-            user.setUserEmail(userUpdateRequest.getUser_email());
-            user.setUserSns(userUpdateRequest.getUser_sns());
-            user.setUserMessage(userUpdateRequest.getUser_message());
+            updateUserDetails(user, userUpdateRequest);
 
             // 프로필 이미지 업데이트
             MultipartFile userImg = userUpdateRequest.getUser_img();
             if (userImg != null && !userImg.isEmpty()) {
+                // 기존 이미지 삭제 후 새 이미지 업로드
+                if (user.getUserImg() != null) {
+                    s3Service.deleteFile(user.getUserImg());
+                }
                 String imageUrl = s3Service.uploadFile(userImg);
                 user.setUserImg(imageUrl);
             }
@@ -206,7 +205,43 @@ public class UserService {
 
         } catch (Exception e) {
             logger.error("Error updating user profile: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
         }
     }
+
+    // 현재 비밀번호 검증
+    private boolean isValidCurrentPassword(User user, String currentPassword) {
+        if (currentPassword == null) {
+            logger.warn("현재 비밀번호가 입력되지 않았습니다.");
+            return false;
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getUserPwd())) {
+            logger.warn("현재 비밀번호가 일치하지 않습니다.");
+            return false;
+        }
+        return true;
+    }
+
+    // 새 비밀번호 검증 및 설정
+    private boolean updatePassword(User user, UserUpdateRequest request) {
+        if (request.getUser_pwd_new() != null) {
+            if (!request.getUser_pwd_new().equals(request.getUser_pwd_new_check())) {
+                logger.warn("새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.");
+                return false;
+            }
+            user.setUserPwd(passwordEncoder.encode(request.getUser_pwd_new()));
+        }
+        return true;
+    }
+
+    // 기타 유저 정보 업데이트
+    private void updateUserDetails(User user, UserUpdateRequest request) {
+        user.setUserCompany(request.getUser_company());
+        user.setUserDepartment(request.getUser_department());
+        user.setUserPosition(request.getUser_position());
+        user.setUserEmail(request.getUser_email());
+        user.setUserSns(request.getUser_sns());
+        user.setUserMessage(request.getUser_message());
+    }
+
 }

@@ -79,7 +79,7 @@ public class SecurityConfig {
                                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll() // Preflight 요청 허용
                                 .requestMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**").permitAll() // Swagger 허용
                                 .requestMatchers(HttpMethod.POST, "/api/v1/user/login").permitAll() // 로그인 허용
-                                .requestMatchers(HttpMethod.POST, "/api/v1/user/signup").permitAll() // 회원가입 허용
+                                .requestMatchers(HttpMethod.POST, "/api/v1/user/signUp").permitAll() // 회원가입 허용
                                 .requestMatchers(HttpMethod.GET, "/api/v1/article/**").authenticated() // 인증 필요
                                 .requestMatchers(HttpMethod.POST, "/api/v1/article/**").authenticated() // 인증 필요
                                 .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요

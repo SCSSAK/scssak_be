@@ -101,8 +101,6 @@ public class UserService {
     }
 
 
-
-
     // 유저 정보 찾는 메서드
     public User getUser(String userId) {
         return userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
@@ -192,12 +190,13 @@ public class UserService {
             MultipartFile userImg = userUpdateRequest.getUser_img();
             if (userImg != null && !userImg.isEmpty()) {
                 // 기존 이미지 삭제 후 새 이미지 업로드
-                if (user.getUserImg() != null) {
+                if (user.getUserImg() != null && !user.getUserImg().isEmpty()) {
                     s3Service.deleteFile(user.getUserImg());
                 }
                 String imageUrl = s3Service.uploadFile(userImg);
                 user.setUserImg(imageUrl);
             }
+
 
             userRepository.save(user);
             logger.info("유저 정보가 성공적으로 업데이트되었습니다.");

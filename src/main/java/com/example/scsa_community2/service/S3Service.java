@@ -26,7 +26,6 @@ public class S3Service {
 
     public String uploadFile(MultipartFile file) {
         try {
-            // 파일 이름을 S3에 저장할 고유 키로 사용 (필요에 따라 파일명을 가공 가능)
             String keyName = "uploads/" + file.getOriginalFilename();
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -36,23 +35,36 @@ public class S3Service {
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
-            return "https://" + bucketName + ".s3.amazonaws.com/" + keyName;
+            // AWS SDK를 통해 URL 생성
+            return s3Client.utilities().getUrl(builder ->
+                    builder.bucket(bucketName).key(keyName)).toExternalForm();
         } catch (Exception e) {
             throw new RuntimeException("S3 파일 업로드에 실패했습니다.", e);
         }
     }
 
+
     // 파일 삭제
     public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            logger.warn("잘못된 파일 URL: 삭제 요청이 생략됩니다.");
+            return; // 파일 URL이 없으면 삭제 작업 생략
+        }
+
+        // 리전 정보 포함된 URL 처리
+        String region = "ap-northeast-2"; // S3 버킷 리전
+        String bucketUrl = "https://" + bucketName + ".s3." + region + ".amazonaws.com/";
+        String keyName = fileUrl.replace(bucketUrl, "");
+
         try {
-            String keyName = fileUrl.replace("https://" + bucketName + ".s3.amazonaws.com/", "");
-            s3Client.deleteObject(builder ->
-                    builder.bucket(bucketName).key(keyName).build());
+            s3Client.deleteObject(builder -> builder.bucket(bucketName).key(keyName).build());
             logger.info("S3 파일 삭제 성공: {}", fileUrl);
         } catch (Exception e) {
             logger.error("S3 파일 삭제 실패: {}", e.getMessage());
             throw new RuntimeException("S3 파일 삭제에 실패했습니다.", e);
         }
     }
+
+
 
 }

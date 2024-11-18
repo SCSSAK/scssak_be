@@ -1,14 +1,16 @@
 package com.example.scsa_community2.control;
 
-import com.example.scsa_community2.dto.request.ArticleRequest;
+import com.example.scsa_community2.dto.response.ArticleListResponse;
+import com.example.scsa_community2.dto.response.ArticleResponse;
 import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.UserRepository;
-import com.example.scsa_community2.service.ArticleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +22,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/article")
 @RequiredArgsConstructor
 public class ArticleControl {
 
-    private final ArticleService articleService;
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
 
@@ -167,6 +169,72 @@ public class ArticleControl {
         articleRepository.delete(article);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();  // 204 No Content 응답
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getArticles(
+            @RequestParam(value = "article_type", required = false) Integer articleType,
+            @RequestParam(value = "open_type", required = true) Integer openType,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "writer_id", required = false) String writerId,
+            @RequestParam(value = "current_page", defaultValue = "1") int currentPage) {
+
+        // 로그인 체크
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // 401 Unauthorized
+        }
+
+        // 로그인한 사용자 정보
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        User currentUser = principalDetails.getUser();
+
+        // 페이지 설정
+        Pageable pageable = PageRequest.of(currentPage - 1, 10);  // 페이지당 10개 게시글
+        Page<Article> articlePage;
+
+        try {
+            // 조건에 맞는 게시글 목록 조회
+            articlePage = articleRepository.findArticles(articleType, openType, keyword, writerId, String.valueOf(currentUser.getUserSemester()), pageable);
+
+            // 총 페이지 수 계산
+            int totalPage = articlePage.getTotalPages() == 0 ? 1 : articlePage.getTotalPages();
+            if (currentPage > totalPage) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Page exceeds total pages.");
+            }
+
+            // 게시글 목록 가공
+            List<ArticleResponse> articleResponses = articlePage.getContent().stream()
+                    .map(article -> {
+                        ArticleResponse response = new ArticleResponse();
+                        response.setArticleType(article.getArticleType());
+                        response.setArticleTitle(article.getArticleTitle());
+                        response.setArticleContent(article.getArticleContent().length() > 30
+                                ? article.getArticleContent().substring(0, 30) : article.getArticleContent());
+                        response.setArticleUserName(article.getUser().getUserName());
+                        response.setArticleCreatedAt(article.getArticleCreatedAt().toString());
+
+                        // 좋아요 수
+                        response.setArticleLikeCount(article.getArticleLikeCount() != null ? article.getArticleLikeCount() : 0);
+
+                        // 댓글 수
+                        response.setArticleCommentCount(article.getComments() != null ? article.getComments().size() : 0);
+
+                        // 썸네일 이미지 (이미지 목록에서 첫 번째 이미지 사용)
+                        String thumbnail = article.getImageUrls() != null && !article.getImageUrls().isEmpty()
+                                ? article.getImageUrls().get(0).getImageUrl() : ""; // 썸네일 이미지 URL
+                        response.setArticleThumbnail(thumbnail);
+
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+
+            // 성공적인 응답
+            return ResponseEntity.ok(new ArticleListResponse(totalPage, articleResponses));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error" + e.getMessage());
+        }
     }
 
 }

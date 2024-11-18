@@ -10,13 +10,16 @@ import com.example.scsa_community2.service.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/article")
@@ -27,56 +30,50 @@ public class ArticleControl {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
 
-    @PostMapping
-    public ResponseEntity<Void> createArticle(@RequestBody ArticleRequest articleRequest) throws Exception {
-        // 현재 로그인된 사용자 정보 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createArticle(
+            @RequestPart("articleTitle") String articleTitle,
+            @RequestPart("articleContent") String articleContent,
+            @RequestPart("articleType") int articleType,
+            @RequestPart("articleIsOpen") boolean articleIsOpen,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) throws Exception {
 
+        // 로그인된 사용자 정보 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new Exception("Unauthorized");
         }
 
-// authentication.getPrincipal()이 PrincipalDetails 인스턴스를 반환하는 경우 처리
-        Object principal = authentication.getPrincipal();
-        User currentUser = null;
+        // 현재 로그인된 사용자 가져오기
+        String username = (String) authentication.getPrincipal();
+        User currentUser = userRepository.findById(username)
+                .orElseThrow(() -> new Exception("User not found"));
 
-        if (principal instanceof PrincipalDetails) {
-            // PrincipalDetails에서 User 객체 가져오기
-            currentUser = ((PrincipalDetails) principal).getUser();
-        } else if (principal instanceof String) {
-            // principal이 String일 경우 (로그인되지 않은 상태로 "AnonymousUser"가 올 수 있음)
-            String username = (String) principal;
-            currentUser = userRepository.findById(username)
-                    .orElseThrow(() -> new Exception("User not found"));
-        } else {
-            // 예상하지 못한 principal 타입에 대해 로그로 확인하거나 디버깅
-            System.out.println("Unknown principal type: " + principal.getClass().getName());
-            throw new Exception("Unknown authentication principal");
-        }
-
-// 이제 currentUser는 로그인된 User 객체가 됩니다.
-// 그 후 작업을 계속 진행
-
-
-
-        // 제목과 내용 유효성 검사: null 또는 빈 문자열 체크
-        if (articleRequest.getArticleTitle() == null || articleRequest.getArticleTitle().trim().isEmpty() ||
-                articleRequest.getArticleContent() == null || articleRequest.getArticleContent().trim().isEmpty()) {
+        // 제목과 내용 유효성 검사
+        if (articleTitle.isEmpty() || articleContent.isEmpty()) {
             throw new Exception("InvalidInput");
         }
 
         // Article 엔티티 생성
         Article article = new Article();
-        article.setArticleTitle(articleRequest.getArticleTitle());
-        article.setArticleContent(articleRequest.getArticleContent());
-        article.setArticleType(articleRequest.getArticleType());
-        article.setArticleIsOpen(articleRequest.isArticleIsOpen());  // isArticleIsOpen() -> getArticleIsOpen()
+        article.setArticleTitle(articleTitle);
+        article.setArticleContent(articleContent);
+        article.setArticleType(articleType);
+        article.setArticleIsOpen(articleIsOpen);
         article.setArticleCreatedAt(Date.valueOf(LocalDate.now()));
-        article.setUser(currentUser);  // user가 이미 존재하는지 확인하고 설정
+        article.setUser(currentUser);
 
         // 게시글 저장
         articleRepository.save(article);
 
+        // 파일 처리 (필요한 경우)
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                // 파일 저장 로직 추가
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).build();  // 201 Created 응답
     }
+
 }

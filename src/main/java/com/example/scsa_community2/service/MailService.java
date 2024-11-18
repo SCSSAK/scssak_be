@@ -105,7 +105,8 @@ public class MailService {
                 .collect(Collectors.toList());
 
         // 응답 생성
-        return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
+//        return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
+        return new MailListResponse(mailDetails);
     }
 
     public void deleteMail(Long mailId, String senderId) {

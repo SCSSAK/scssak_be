@@ -10,11 +10,11 @@ import java.util.List;
 @AllArgsConstructor
 public class MailListResponse {
 
-    @JsonProperty("receiver_id")
-    private String receiverId;
-
-    @JsonProperty("receiver_name")
-    private String receiverName;
+//    @JsonProperty("receiver_id")
+//    private String receiverId;
+//
+//    @JsonProperty("receiver_name")
+//    private String receiverName;
 
     @JsonProperty("mail_list")
     private List<MailDetail> mailList;

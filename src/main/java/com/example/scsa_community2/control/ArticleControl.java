@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -194,8 +195,35 @@ public class ArticleControl {
         Page<Article> articlePage;
 
         try {
-            // 조건에 맞는 게시글 목록 조회
-            articlePage = articleRepository.findArticles(articleType, openType, keyword, writerId, String.valueOf(currentUser.getUserSemester()), pageable);
+            // open_type에 따른 게시글 조회
+            if (openType == 1) {
+                // 전체 공개 게시물 목록
+                articlePage = articleRepository.findArticles(articleType, 1, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+            } else if (openType == 2) {
+                // 기수 공개 게시물 목록
+                articlePage = articleRepository.findArticles(articleType, 2, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+            } else if (openType == 3) {
+                // 전체 및 기수 공개 게시물 목록
+                if (writerId != null) {
+                    // writerId가 있을 경우 학기 비교
+                    Optional<User> writer = userRepository.findById(writerId);
+                    if (writer.isPresent()) {
+                        User writerUser = writer.get();
+                        if (!writerUser.getUserSemester().equals(currentUser.getUserSemester())) {
+                            // 학기가 다르면 전체 공개 게시물만 반환
+                            articlePage = articleRepository.findArticles(articleType, 1, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+                        } else {
+                            articlePage = articleRepository.findArticles(articleType, 3, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+                        }
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Writer not found.");
+                    }
+                } else {
+                    articlePage = articleRepository.findArticles(articleType, 3, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid open_type.");
+            }
 
             // 총 페이지 수 계산
             int totalPage = articlePage.getTotalPages() == 0 ? 1 : articlePage.getTotalPages();
@@ -233,8 +261,9 @@ public class ArticleControl {
             return ResponseEntity.ok(new ArticleListResponse(totalPage, articleResponses));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error" + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error: " + e.getMessage());
         }
     }
+
 
 }

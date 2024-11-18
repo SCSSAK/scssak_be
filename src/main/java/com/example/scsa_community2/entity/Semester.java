@@ -20,6 +20,8 @@ public class Semester {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer semesterId;
 
+
+    private Integer semesterTardyPenalty;
     private String semesterCpId;
     private LocalDate semesterStartDate;
     private LocalDate semesterEndDate;

@@ -89,35 +89,33 @@ public class AttendanceService {
 
     public MainPageInfo getMainPageInfo(String userId) {
         try {
-            // 유저 확인
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // 현재 학기 확인 (반장이 속한 기수)
             Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
                     .orElseThrow(() -> new RuntimeException("No active semester found"));
 
-            // 지각자 명단: 출석하지 않은 전체 사용자
+            // 벌금 계산 로직
+            int penaltyPerTardy = currentSemester.getSemesterTardyPenalty();
+//            int totalPenalty = user.getUserTardyCount() * penaltyPerTardy;
+
             List<String> absentList = userRepository.findUsersBySemesterCpId(currentSemester.getSemesterCpId())
                     .stream()
-                    .filter(absentUser -> !attendanceRepository.existsByUserId(absentUser.getUserId())) // 출석하지 않은 사람
+                    .filter(absentUser -> !attendanceRepository.existsByUserId(absentUser.getUserId()))
                     .map(User::getUserName)
                     .collect(Collectors.toList());
 
-            // 공지사항 리스트: 전체 공지사항 (제한 없음)
             List<String> noticeList = noticeRepository.findByNoticeSemester_SemesterId(currentSemester.getSemesterId())
                     .stream()
                     .map(Notice::getNoticeContent)
                     .collect(Collectors.toList());
 
-            // MainPageInfo DTO 생성
             return MainPageInfo.builder()
                     .userTardyCount(user.getUserTardyCount())
-                    .tardyPenalty(user.getUserTardyCount() * 10000)
-                    .absentList(absentList) // 전체 지각자 명단
-                    .noticeList(noticeList) // 공지사항 전체
+//                    .tardyPenalty(totalPenalty) // 계산된 벌금 전달
+                    .absentList(absentList)
+                    .noticeList(noticeList)
                     .build();
-
         } catch (Exception e) {
             log.error("Error while fetching main page info: {}", e.getMessage());
             throw new RuntimeException("Error fetching main page info");

@@ -93,8 +93,8 @@ public class MailService {
         }
 
         // 수신된 메일 목록 조회
-        List<Mail> mails = mailRepository.findByReceiver_UserId(receiverId);
-
+//        List<Mail> mails = mailRepository.findByReceiver_UserId(receiverId);
+        List<Mail> mails = mailRepository.findByReceiver_UserIdOrderByMailCreatedAtDesc(receiverId);
         // DTO 변환
         List<MailListResponse.MailDetail> mailDetails = mails.stream()
                 .map(mail -> new MailListResponse.MailDetail(

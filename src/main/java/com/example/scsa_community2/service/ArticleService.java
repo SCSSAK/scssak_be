@@ -153,6 +153,7 @@ public class ArticleService {
 
     private CommentResponse mapToCommentResponse(Comment comment) {
         CommentResponse response = new CommentResponse();
+        response.setCommentId(comment.getCommentId());
         response.setCommentUserId(comment.getUser().getUserId());
         response.setCommentUserName(comment.getUser().getUserName());
         response.setCommentContent(comment.getCommentContent());

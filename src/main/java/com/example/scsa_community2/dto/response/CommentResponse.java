@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 public class CommentResponse {
 
-//    @JsonProperty("comment_id")
-//    private Long commentId;
+    @JsonProperty("comment_id")
+    private Long commentId;
 
     @JsonProperty("user_id")
     private String commentUserId;

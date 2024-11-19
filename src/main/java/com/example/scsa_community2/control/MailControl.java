@@ -63,19 +63,19 @@ public class MailControl {
 
     @GetMapping("/{user_id}")
     @Operation(description = "Retrieves the list of mails received by a specific user.")
-//    public ResponseEntity<MailListResponse> getMailList(
-//            @PathVariable("user_id") String userId,
-//            @AuthenticationPrincipal PrincipalDetails userDetails)
-    public ResponseEntity<?> getMailList(@PathVariable("user_id") String userId, @AuthenticationPrincipal PrincipalDetails userDetails) {
+    public ResponseEntity<MailListResponse> getMailList(
+            @PathVariable("user_id") String userId,
+            @AuthenticationPrincipal PrincipalDetails userDetails){
+//    public ResponseEntity<?> getMailList(@PathVariable("user_id") String userId, @AuthenticationPrincipal PrincipalDetails userDetails) {
         if (userDetails == null || userDetails.getUser() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
         }
         String requestorId = userDetails.getUser().getUserId();
         try {
             MailListResponse response = mailService.getMailList(requestorId, userId);
-            List<MailListResponse.MailDetail> mailList = response.getMailList();
+//            List<MailListResponse.MailDetail> mailList = response.getMailList();
 //            return ResponseEntity.ok(response); // 200
-            return ResponseEntity.ok(mailList);
+            return ResponseEntity.ok(response);
         } catch (UnauthorizedAccessException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
         } catch (EntityNotFoundException e) {

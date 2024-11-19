@@ -107,7 +107,8 @@ public class MailService {
 
         // 응답 생성
 //        return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
-        return new MailListResponse(mailDetails);
+//        return new MailListResponse(mailDetails);
+        return new MailListResponse(receiver.getUserName(), mailDetails);
     }
 
     public void deleteMail(Long mailId, String senderId) {

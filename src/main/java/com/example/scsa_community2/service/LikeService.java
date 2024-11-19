@@ -30,13 +30,30 @@ public class LikeService {
         if (alreadyLiked) {
             // 3. 좋아요 삭제
             likeRepository.deleteByArticleAndUser(article, user);
+            decreaseLikeCount(article);
         } else {
             // 4. 좋아요 추가
             Like like = new Like();
             like.setArticle(article);
             like.setUser(user);
             likeRepository.save(like);
+            increaseLikeCount(article);
         }
     }
-}
 
+    private void increaseLikeCount(Article article) {
+        if (article.getArticleLikeCount() == null) {
+            article.setArticleLikeCount(1);
+        } else {
+            article.setArticleLikeCount(article.getArticleLikeCount() + 1);
+        }
+        articleRepository.save(article); // 변경 사항 반영
+    }
+
+    private void decreaseLikeCount(Article article) {
+        if (article.getArticleLikeCount() != null && article.getArticleLikeCount() > 0) {
+            article.setArticleLikeCount(article.getArticleLikeCount() - 1);
+        }
+        articleRepository.save(article); // 변경 사항 반영
+    }
+}

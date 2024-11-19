@@ -1,8 +1,10 @@
 package com.example.scsa_community2.control;
 
-import com.example.scsa_community2.dto.request.ArticleRequest;
+import com.example.scsa_community2.dto.request.CreateArticleRequest;
+import com.example.scsa_community2.dto.request.UpdateArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleDetailResponse;
 import com.example.scsa_community2.exception.BaseException;
+import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.UserRepository;
@@ -29,7 +31,7 @@ public class ArticleControl {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> createArticle(
-            @ModelAttribute ArticleRequest request,
+            @ModelAttribute CreateArticleRequest request,
             @AuthenticationPrincipal PrincipalDetails userDetails) {
 
         if (userDetails == null || userDetails.getUser() == null) {
@@ -71,7 +73,7 @@ public class ArticleControl {
     @PutMapping("/{articleId}")
     public ResponseEntity<Void> updateArticle(
             @PathVariable("articleId") Long articleId,
-            @ModelAttribute ArticleRequest request,
+            @RequestBody UpdateArticleRequest request,
             @AuthenticationPrincipal PrincipalDetails userDetails) {
 
         if (userDetails == null || userDetails.getUser() == null) {
@@ -100,13 +102,45 @@ public class ArticleControl {
 
         try {
             articleService.deleteArticle(articleId, userDetails.getUser());
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build(); // 204 No Content
+            return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            if (e.getErrorCode() == ErrorCode.NOT_FOUND_DATA) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
+            } else if (e.getErrorCode() == ErrorCode.NOT_PRIVILEGED) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
+
+
+    @GetMapping("/edit/{articleId}")
+    public ResponseEntity<Void> getEditPage(
+            @PathVariable("articleId") Long articleId,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+        }
+
+        try {
+            articleService.validateEditPermission(articleId, userDetails.getUser());
+            return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
+        } catch (BaseException e) {
+            if (e.getErrorCode() == ErrorCode.NOT_FOUND_DATA) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
+            } else if (e.getErrorCode() == ErrorCode.NOT_PRIVILEGED) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+        }
+    }
+
+
 
 //    @GetMapping
 //    public ResponseEntity<?> getArticles(

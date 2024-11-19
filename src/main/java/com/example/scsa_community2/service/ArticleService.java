@@ -1,6 +1,7 @@
 package com.example.scsa_community2.service;
 
-import com.example.scsa_community2.dto.request.ArticleRequest;
+import com.example.scsa_community2.dto.request.CreateArticleRequest;
+import com.example.scsa_community2.dto.request.UpdateArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleDetailResponse;
 import com.example.scsa_community2.dto.response.CommentResponse;
 import com.example.scsa_community2.entity.Article;
@@ -11,7 +12,10 @@ import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.LikeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,17 +24,20 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ArticleService {
+
+    Logger logger = LoggerFactory.getLogger(ArticleService.class);
 
     private final ArticleRepository articleRepository;
     private final S3Service s3Service;
     private final LikeRepository likeRepository;
 
 
-    public void createArticle(ArticleRequest request, User user) {
-        validateArticleRequest(request);
+    public void createArticle(CreateArticleRequest request, User user) {
+        validateCreateRequest(request);
 
         // Article 생성
         Article article = new Article();
@@ -72,14 +79,24 @@ public class ArticleService {
         }
     }
 
-    private void validateArticleRequest(ArticleRequest request) {
-        if (request.getArticleTitle() == null || request.getArticleTitle().isEmpty()) {
+    private void validateCommonFields(String title, String content) {
+        if (title == null || title.isEmpty()) {
             throw new BaseException(ErrorCode.INVALID_INPUT);
         }
-        if (request.getArticleContent() == null || request.getArticleContent().isEmpty()) {
+        if (content == null || content.isEmpty()) {
             throw new BaseException(ErrorCode.INVALID_INPUT);
         }
     }
+
+
+    private void validateCreateRequest(CreateArticleRequest request) {
+        validateCommonFields(request.getArticleTitle(), request.getArticleContent());
+
+        if (request.getImages() == null || request.getImages().isEmpty()) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+    }
+
 
     public ArticleDetailResponse getArticleById(Long articleId, User user) {
         // 게시글 조회
@@ -140,25 +157,62 @@ public class ArticleService {
         return likeRepository.existsByArticleAndUser(article, user);
     }
 
+
     // PUT: 게시글 수정
-    public void updateArticle(Long articleId, ArticleRequest request, User user) {
+    @Transactional
+    public void updateArticle(Long articleId, UpdateArticleRequest request, User user) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+
 
         if (!article.getUser().getUserId().equals(user.getUserId())) {
             throw new BaseException(ErrorCode.NOT_PRIVILEGED);
         }
 
-        validateArticleRequest(request);
+        validateUpdateRequest(request);
 
-        article.setArticleTitle(request.getArticleTitle());
-        article.setArticleContent(request.getArticleContent());
-        article.setArticleType(request.getArticleType());
-        article.setArticleIsOpen(request.isArticleIsOpen());
+        logger.info("requestArticleTitle: {}", request.getArticleTitle());
+        logger.info("requestArticleContent: {}", request.getArticleContent());
+        logger.info("requestArticleType: {}", request.getArticleType());
+        logger.info("requestisOpen: {}", request.isArticleIsOpen());
+
+        // 수정 가능한 필드만 업데이트
+        if (request.getArticleTitle() != null) {
+            article.setArticleTitle(request.getArticleTitle());
+        }
+        if (request.getArticleContent() != null) {
+            article.setArticleContent(request.getArticleContent());
+        }
+        if (request.getArticleType() != null) {
+            article.setArticleType(request.getArticleType());
+        }
+        if (request.isArticleIsOpen() != null) {
+            article.setArticleIsOpen(request.isArticleIsOpen());
+        }
+
+        logger.info("articleTitle: {}", article.getArticleTitle());
+        logger.info("articleContent: {}", article.getArticleContent());
+        logger.info("articleType: {}", article.getArticleType());
+        logger.info("isOpen: {}", article.getArticleIsOpen());
         articleRepository.save(article);
     }
 
+
+    private void validateUpdateRequest(UpdateArticleRequest request) {
+        if (request.getArticleTitle() != null && request.getArticleTitle().isEmpty()) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+        if (request.getArticleContent() != null && request.getArticleContent().isEmpty()) {
+            throw new BaseException(ErrorCode.INVALID_INPUT);
+        }
+        // 이미지가 선택사항일 경우
+//        if (request.getImages() != null && request.getImages().isEmpty()) {
+//            throw new BaseException(ErrorCode.INVALID_INPUT);
+//        }
+    }
+
     // DELETE: 게시글 삭제
+    @Transactional
     public void deleteArticle(Long articleId, User user) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
@@ -167,7 +221,26 @@ public class ArticleService {
             throw new BaseException(ErrorCode.NOT_PRIVILEGED);
         }
 
+        if (article.getImageUrls() != null && !article.getImageUrls().isEmpty()) {
+            try {
+                article.getImageUrls().forEach(imageUrl -> s3Service.deleteFile(imageUrl.getImageUrl()));
+            } catch (Exception e) {
+                logger.error("Failed to delete images from S3: {}", e.getMessage());
+            }
+        }
+
         articleRepository.delete(article);
     }
+
+
+    public void validateEditPermission(Long articleId, User user) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+
+        if (!article.getUser().getUserId().equals(user.getUserId())) {
+            throw new BaseException(ErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
+        }
+    }
+
 
 }

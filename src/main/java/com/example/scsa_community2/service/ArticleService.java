@@ -181,10 +181,10 @@ public class ArticleService {
 
         validateUpdateRequest(request);
 
-        logger.info("requestArticleTitle: {}", request.getArticleTitle());
-        logger.info("requestArticleContent: {}", request.getArticleContent());
-        logger.info("requestArticleType: {}", request.getArticleType());
-        logger.info("requestisOpen: {}", request.isArticleIsOpen());
+//        logger.info("requestArticleTitle: {}", request.getArticleTitle());
+//        logger.info("requestArticleContent: {}", request.getArticleContent());
+//        logger.info("requestArticleType: {}", request.getArticleType());
+//        logger.info("requestisOpen: {}", request.isArticleIsOpen());
 
         // 수정 가능한 필드만 업데이트
         if (request.getArticleTitle() != null) {
@@ -200,10 +200,10 @@ public class ArticleService {
             article.setArticleIsOpen(request.isArticleIsOpen());
         }
 
-        logger.info("articleTitle: {}", article.getArticleTitle());
-        logger.info("articleContent: {}", article.getArticleContent());
-        logger.info("articleType: {}", article.getArticleType());
-        logger.info("isOpen: {}", article.getArticleIsOpen());
+//        logger.info("articleTitle: {}", article.getArticleTitle());
+//        logger.info("articleContent: {}", article.getArticleContent());
+//        logger.info("articleType: {}", article.getArticleType());
+//        logger.info("isOpen: {}", article.getArticleIsOpen());
         articleRepository.save(article);
     }
 

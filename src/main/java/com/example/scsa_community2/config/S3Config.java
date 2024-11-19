@@ -35,7 +35,7 @@ public class S3Config {
     public S3Client s3Client() {
         AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
         // Log the region being used
-        logger.info("Configuring S3Client with region: {}", region);
+//        logger.info("Configuring S3Client with region: {}", region);
 
 //        return S3Client.builder()
 //                .region(Region.of(region))

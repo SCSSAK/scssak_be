@@ -1,5 +1,6 @@
 package com.example.scsa_community2.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class User {
     private Semester userSemester;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // 부모로 설정
     private Attendance attendance;
 
     private String userPwd;

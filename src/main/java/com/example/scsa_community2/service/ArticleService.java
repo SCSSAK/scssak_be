@@ -3,6 +3,8 @@ package com.example.scsa_community2.service;
 import com.example.scsa_community2.dto.request.CreateArticleRequest;
 import com.example.scsa_community2.dto.request.UpdateArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleDetailResponse;
+import com.example.scsa_community2.dto.response.ArticleListResponse;
+import com.example.scsa_community2.dto.response.ArticleResponse;
 import com.example.scsa_community2.dto.response.CommentResponse;
 import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.Comment;
@@ -12,15 +14,20 @@ import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.LikeRepository;
+import com.example.scsa_community2.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +41,7 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final S3Service s3Service;
     private final LikeRepository likeRepository;
+    private final UserRepository userRepository;
 
 
     public void createArticle(CreateArticleRequest request, User user) {
@@ -45,7 +53,7 @@ public class ArticleService {
         article.setArticleContent(request.getArticleContent());
         article.setArticleType(request.getArticleType());
         article.setArticleIsOpen(request.isArticleIsOpen());
-        article.setArticleCreatedAt(Date.valueOf(LocalDate.now()));
+        article.setArticleCreatedAt(LocalDateTime.now()); // 변경된 부분
         article.setUser(user);
 
         // 이미지 처리: S3 업로드 및 URL 저장
@@ -240,6 +248,73 @@ public class ArticleService {
         if (!article.getUser().getUserId().equals(user.getUserId())) {
             throw new BaseException(ErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
         }
+    }
+
+
+    public ArticleListResponse getArticles(
+            User currentUser, // 현재 사용자 정보
+            Integer openType, // 공개 유형
+            Integer articleType, // 게시글 유형
+            String keyword, // 검색 키워드
+            String writerId, // 작성자 ID
+            int currentPage // 현재 페이지
+    ) {
+        Pageable pageable = PageRequest.of(currentPage - 1, 10); // 한 페이지당 10개
+        Page<Article> articlePage;
+        logger.info("service_open_type: {}",openType);
+        // 공개 유형에 따른 쿼리 분기
+        if (openType == 1) { // 전체 공개 게시물
+            articlePage = articleRepository.findArticles(articleType, keyword, writerId, null, pageable);
+        } else if (openType == 2) { // 기수 공개 게시물
+            articlePage = articleRepository.findArticles(articleType, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+        } else if (openType == 3) { // 전체 및 기수 공개
+            if (writerId != null) {
+                User writer = userRepository.findById(writerId)
+                        .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+                logger.info("writerSemester : {}", writer.getUserSemester().getSemesterId());
+                logger.info("currentUserSemester : {}", currentUser.getUserSemester().getSemesterId());
+                if (!writer.getUserSemester().equals(currentUser.getUserSemester())) {
+                    // 전체 공개만 반환
+                    articlePage = articleRepository.findArticles(articleType, keyword, writerId, null, pageable);
+                } else {
+                    // 전체 및 기수 공개 반환
+                    articlePage = articleRepository.findArticles(articleType, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
+                }
+            } else {
+                logger.info("currentUserSemester : {}", currentUser.getUserSemester().getSemesterId());
+                // writerId가 없는 경우
+                articlePage = articleRepository.findArticles(articleType, keyword, null, currentUser.getUserSemester().getSemesterId(), pageable);
+            }
+        } else {
+            throw new BaseException(ErrorCode.INVALID_INPUT); // 잘못된 openType
+        }
+
+        // 게시글 목록 변환
+        List<ArticleResponse> articles = articlePage.getContent().stream()
+                .map(this::mapToArticleResponse)
+                .collect(Collectors.toList());
+
+        int totalPage = Math.max(1, articlePage.getTotalPages()); // 최소 1페이지 반환
+        return new ArticleListResponse(totalPage, articles);
+    }
+
+
+
+    private ArticleResponse mapToArticleResponse(Article article) {
+        ArticleResponse response = new ArticleResponse();
+        response.setArticleId(article.getArticleId());
+        response.setArticleType(article.getArticleType());
+        response.setArticleTitle(article.getArticleTitle());
+        response.setArticleContent(article.getArticleContent().length() > 30
+                ? article.getArticleContent().substring(0, 30) : article.getArticleContent());
+        response.setArticleUserName(article.getUser().getUserName());
+        response.setArticleCreatedAt(article.getArticleCreatedAt().toString());
+        response.setArticleLikeCount(article.getArticleLikeCount() != null ? article.getArticleLikeCount() : 0);
+        response.setArticleCommentCount(article.getComments() != null ? article.getComments().size() : 0);
+        response.setArticleThumbnail(
+                article.getImageUrls() != null && !article.getImageUrls().isEmpty()
+                        ? article.getImageUrls().get(0).getImageUrl() : ""); // 썸네일
+        return response;
     }
 
 

@@ -3,6 +3,7 @@ package com.example.scsa_community2.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -24,7 +25,7 @@ public class Article {
     private String articleContent;
     private Integer articleType;
     private Boolean articleIsOpen;
-    private java.sql.Date articleCreatedAt;
+    private LocalDateTime articleCreatedAt;
     private Integer articleSemester;
     private Integer articleLikeCount;
     private Integer articleCommentCount;

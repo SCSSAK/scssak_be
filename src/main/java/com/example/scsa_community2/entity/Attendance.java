@@ -1,5 +1,6 @@
 package com.example.scsa_community2.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class Attendance {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonBackReference // 자식으로 설정
     private User user;
 
     private LocalDateTime attendanceTime;  // 날짜와 시간 정보 모두 저장

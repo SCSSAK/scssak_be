@@ -3,6 +3,8 @@ package com.example.scsa_community2.control;
 import com.example.scsa_community2.dto.request.CreateArticleRequest;
 import com.example.scsa_community2.dto.request.UpdateArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleDetailResponse;
+import com.example.scsa_community2.dto.response.ArticleListResponse;
+import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.jwt.PrincipalDetails;
@@ -12,6 +14,8 @@ import com.example.scsa_community2.service.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -139,6 +143,38 @@ public class ArticleControl {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getArticleList(
+            @RequestParam(value = "article_type", required = false) Integer articleType,
+            @RequestParam(value = "open_type") Integer openType,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "writer_id", required = false) String writerId,
+            @RequestParam(value = "current_page", defaultValue = "1") int currentPage,
+            @AuthenticationPrincipal PrincipalDetails userDetails) {
+
+        if (userDetails == null || userDetails.getUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+        }
+        logger.info("open_type: {}",openType);
+        User currentUser = userDetails.getUser();
+
+        try {
+            // 서비스 호출
+            ArticleListResponse response = articleService.getArticles(
+                    currentUser, openType, articleType, keyword, writerId, currentPage
+            );
+
+            // 성공 응답
+            return ResponseEntity.ok(response); // 200 OK
+
+        } catch (BaseException e) {
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+        }
+    }
+
 
 
 

@@ -10,6 +10,7 @@ import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
+import com.example.scsa_community2.repository.LikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,8 @@ public class ArticleService {
 
     private final ArticleRepository articleRepository;
     private final S3Service s3Service;
+    private final LikeRepository likeRepository;
+
 
     public void createArticle(ArticleRequest request, User user) {
         validateArticleRequest(request);
@@ -99,7 +102,7 @@ public class ArticleService {
         response.setArticleCreatedAt(article.getArticleCreatedAt().toString());
         response.setArticleLikeCount(article.getArticleLikeCount() != null ? article.getArticleLikeCount() : 0);
 
-        // 좋아요 여부 (사용자가 좋아요를 눌렀는지 확인하는 로직 추가)
+        // 좋아요 여부 확인
         response.setArticleIsLiked(checkIfUserLikedArticle(article, user));
 
         // 이미지 URL 리스트
@@ -121,6 +124,7 @@ public class ArticleService {
         return response;
     }
 
+
     private CommentResponse mapToCommentResponse(Comment comment) {
         CommentResponse response = new CommentResponse();
         response.setCommentUserId(comment.getUser().getUserId());
@@ -130,30 +134,11 @@ public class ArticleService {
         return response;
     }
 
-    private boolean checkIfUserLikedArticle(Article article, User user) {
+    boolean checkIfUserLikedArticle(Article article, User user) {
         // 좋아요 여부를 확인하는 로직 구현
-        // 예: article.getLikes().contains(user)
-        return false; // 임시로 false 반환
+        // Like 테이블에서 특정 게시글과 사용자의 좋아요 여부 확인
+        return likeRepository.existsByArticleAndUser(article, user);
     }
-
-//    private ArticleResponse mapToResponse(Article article) {
-//        // Article 엔티티를 ArticleResponse로 변환
-//        ArticleResponse response = new ArticleResponse();
-//        response.setArticleTitle(article.getArticleTitle());
-//        response.setArticleContent(article.getArticleContent());
-//        response.setArticleUserName(article.getUser().getUserName());
-//        response.setArticleCreatedAt(article.getArticleCreatedAt().toString());
-//        response.setArticleLikeCount(article.getArticleLikeCount() != null ? article.getArticleLikeCount() : 0);
-//        response.setArticleCommentCount(article.getComments() != null ? article.getComments().size() : 0);
-//
-//        // 썸네일 이미지 설정 (이미지가 있을 경우 첫 번째 이미지를 사용)
-//        if (article.getImageUrls() != null && !article.getImageUrls().isEmpty()) {
-//            response.setArticleThumbnail(article.getImageUrls().get(0).getImageUrl());
-//        }
-//
-//        return response;
-//    }
-
 
     // PUT: 게시글 수정
     public void updateArticle(Long articleId, ArticleRequest request, User user) {

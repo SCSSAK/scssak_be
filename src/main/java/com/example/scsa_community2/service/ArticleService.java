@@ -53,6 +53,7 @@ public class ArticleService {
         article.setArticleContent(request.getArticleContent());
         article.setArticleType(request.getArticleType());
         article.setArticleIsOpen(request.isArticleIsOpen());
+        article.setArticleSemester(user.getUserSemester().getSemesterId());
         article.setArticleCreatedAt(LocalDateTime.now()); // 변경된 부분
         article.setUser(user);
 

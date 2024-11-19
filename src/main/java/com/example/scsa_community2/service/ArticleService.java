@@ -253,42 +253,42 @@ public class ArticleService {
 
 
     public ArticleListResponse getArticles(
-            User currentUser, // 현재 사용자 정보
-            Integer openType, // 공개 유형
-            Integer articleType, // 게시글 유형
-            String keyword, // 검색 키워드
-            String writerId, // 작성자 ID
-            int currentPage // 현재 페이지
+            User currentUser,
+            Integer openType,
+            Integer articleType,
+            String keyword,
+            String writerId,
+            int currentPage
     ) {
         Pageable pageable = PageRequest.of(currentPage - 1, 10); // 한 페이지당 10개
-        Page<Article> articlePage;
-        logger.info("service_open_type: {}",openType);
-        // 공개 유형에 따른 쿼리 분기
-        if (openType == 1) { // 전체 공개 게시물
-            articlePage = articleRepository.findArticles(articleType, keyword, writerId, null, pageable);
-        } else if (openType == 2) { // 기수 공개 게시물
-            articlePage = articleRepository.findArticles(articleType, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
-        } else if (openType == 3) { // 전체 및 기수 공개
-            if (writerId != null) {
-                User writer = userRepository.findById(writerId)
-                        .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
-                logger.info("writerSemester : {}", writer.getUserSemester().getSemesterId());
-                logger.info("currentUserSemester : {}", currentUser.getUserSemester().getSemesterId());
-                if (!writer.getUserSemester().equals(currentUser.getUserSemester())) {
-                    // 전체 공개만 반환
-                    articlePage = articleRepository.findArticles(articleType, keyword, writerId, null, pageable);
-                } else {
-                    // 전체 및 기수 공개 반환
-                    articlePage = articleRepository.findArticles(articleType, keyword, writerId, currentUser.getUserSemester().getSemesterId(), pageable);
-                }
+
+        Integer semesterId = null;
+
+        if (openType == 1) {
+            // 전체 공개 게시물만
+            semesterId = null;
+        } else if (openType == 2) {
+            // 기수 공개 게시물
+            semesterId = currentUser.getUserSemester().getSemesterId();
+        } else if (openType == 3) {
+            // 전체 및 기수 공개 게시물
+            if (writerId == null) {
+                throw new BaseException(ErrorCode.INVALID_INPUT); // writerId가 없는 경우 에러 반환
+            }
+
+            User writer = userRepository.findById(writerId)
+                    .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // writerId가 유효하지 않음
+
+            if (!writer.getUserSemester().equals(currentUser.getUserSemester())) {
+                semesterId = null; // 전체 공개 게시물만 반환
             } else {
-                logger.info("currentUserSemester : {}", currentUser.getUserSemester().getSemesterId());
-                // writerId가 없는 경우
-                articlePage = articleRepository.findArticles(articleType, keyword, null, currentUser.getUserSemester().getSemesterId(), pageable);
+                semesterId = currentUser.getUserSemester().getSemesterId(); // 전체 및 기수 공개
             }
         } else {
             throw new BaseException(ErrorCode.INVALID_INPUT); // 잘못된 openType
         }
+
+        Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, pageable);
 
         // 게시글 목록 변환
         List<ArticleResponse> articles = articlePage.getContent().stream()
@@ -298,7 +298,6 @@ public class ArticleService {
         int totalPage = Math.max(1, articlePage.getTotalPages()); // 최소 1페이지 반환
         return new ArticleListResponse(totalPage, articles);
     }
-
 
 
     private ArticleResponse mapToArticleResponse(Article article) {

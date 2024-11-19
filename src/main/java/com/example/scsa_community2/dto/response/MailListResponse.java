@@ -30,5 +30,9 @@ public class MailListResponse {
 
         @JsonProperty("mail_created_at")
         private String mailCreatedAt; // 날짜 형식으로 반환
+
+        @JsonProperty("mail_writer_id")
+        private String mailWriterId;
+
     }
 }

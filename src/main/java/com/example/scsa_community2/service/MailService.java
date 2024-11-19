@@ -100,7 +100,8 @@ public class MailService {
                 .map(mail -> new MailListResponse.MailDetail(
                         mail.getMailId(),
                         mail.getMailContent(),
-                        mail.getMailCreatedAt().toLocalDate().toString() // 날짜 형식 변환
+                        mail.getMailCreatedAt().toLocalDate().toString(), // 날짜 형식 변환
+                        mail.getSender().getUserId()
                 ))
                 .collect(Collectors.toList());
 

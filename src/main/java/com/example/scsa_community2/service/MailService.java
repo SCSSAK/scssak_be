@@ -116,12 +116,12 @@ public class MailService {
                         mail.getSender().getUserId()
                 ))
                 .collect(Collectors.toList());
-
+        int totalPage = Math.max(1, mailPage.getTotalPages());
         // 응답 생성
         return new MailListResponse(
                 receiver.getUserName(),
                 mailDetails,
-                mailPage.getTotalPages(),
+                totalPage,
                 currentPage
         );
     }

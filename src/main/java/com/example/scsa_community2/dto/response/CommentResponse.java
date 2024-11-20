@@ -5,14 +5,13 @@ import lombok.Data;
 
 @Data
 public class CommentResponse {
-
     @JsonProperty("comment_id")
     private Long commentId;
 
-    @JsonProperty("user_id")
+    @JsonProperty("comment_user_id")
     private String commentUserId;
 
-    @JsonProperty("user_name")
+    @JsonProperty("comment_user_name")
     private String commentUserName;
 
     @JsonProperty("comment_content")
@@ -21,3 +20,4 @@ public class CommentResponse {
     @JsonProperty("comment_created_at")
     private String commentCreatedAt;
 }
+

@@ -4,6 +4,7 @@ import com.example.scsa_community2.dto.request.CreateArticleRequest;
 import com.example.scsa_community2.dto.request.UpdateArticleRequest;
 import com.example.scsa_community2.dto.response.ArticleDetailResponse;
 import com.example.scsa_community2.dto.response.ArticleListResponse;
+import com.example.scsa_community2.dto.response.CreateArticleResponse;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.BaseException;
 import com.example.scsa_community2.exception.ErrorCode;
@@ -34,7 +35,7 @@ public class ArticleControl {
     private final ArticleService articleService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> createArticle(
+    public ResponseEntity<?> createArticle(
             @ModelAttribute CreateArticleRequest request,
             @AuthenticationPrincipal PrincipalDetails userDetails) {
 
@@ -43,14 +44,16 @@ public class ArticleControl {
         }
 
         try {
-            articleService.createArticle(request, userDetails.getUser());
-            return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created
+            Long articleId = articleService.createArticle(request, userDetails.getUser());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new CreateArticleResponse(articleId)); // 201 Created
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build(); // 400, 500 등 처리
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
+
 
     @GetMapping("/{articleId}")
     public ResponseEntity<?> getArticleById(
@@ -65,11 +68,12 @@ public class ArticleControl {
             ArticleDetailResponse articleDetailResponse = articleService.getArticleById(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).body(articleDetailResponse); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build(); // 404, 500 등 처리
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
+
 
 
 

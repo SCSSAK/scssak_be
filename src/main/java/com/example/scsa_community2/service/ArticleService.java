@@ -45,7 +45,7 @@ public class ArticleService {
     private final UserRepository userRepository;
 
 
-    public void createArticle(CreateArticleRequest request, User user) {
+    public Long createArticle(CreateArticleRequest request, User user) {
         validateCreateRequest(request);
 
         // Article 생성
@@ -55,22 +55,24 @@ public class ArticleService {
         article.setArticleType(request.getArticleType());
         article.setArticleIsOpen(request.isArticleIsOpen());
         article.setArticleSemester(user.getUserSemester().getSemesterId());
-        article.setArticleCreatedAt(LocalDateTime.now()); // 변경된 부분
+        article.setArticleCreatedAt(LocalDateTime.now());
         article.setUser(user);
 
-        // 이미지 처리: S3 업로드 및 URL 저장
+        // 이미지 처리
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             List<ImageUrl> imageUrls = uploadImagesToS3(request.getImages());
-            article.setImageUrls(imageUrls); // 이미지 URL 리스트 설정
+            article.setImageUrls(imageUrls);
         }
 
         // 게시글 저장
         try {
-            articleRepository.save(article);
+            Article savedArticle = articleRepository.save(article);
+            return savedArticle.getArticleId(); // 저장된 게시글 ID 반환
         } catch (Exception e) {
             throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     private List<ImageUrl> uploadImagesToS3(List<MultipartFile> images) {
         try {
@@ -111,28 +113,30 @@ public class ArticleService {
     public ArticleDetailResponse getArticleById(Long articleId, User user) {
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
-        // Article -> ArticleResponse 변환
-        ArticleDetailResponse response = mapToArticleResponse(article, user);
-        return response;
+        // 변환 메서드를 호출하여 DTO 반환
+        return mapToArticleDetailResponse(article, user);
     }
 
-    private ArticleDetailResponse mapToArticleResponse(Article article, User user) {
+    // Article -> ArticleDetailResponse 변환 메서드
+    private ArticleDetailResponse mapToArticleDetailResponse(Article article, User user) {
         ArticleDetailResponse response = new ArticleDetailResponse();
 
-        // 게시글 기본 정보
+        // 기본 정보 설정
         response.setArticleUserId(article.getUser().getUserId());
         response.setArticleUserName(article.getUser().getUserName());
         response.setArticleTitle(article.getArticleTitle());
         response.setArticleContent(article.getArticleContent());
+        response.setArticleType(article.getArticleType());
+        response.setArticleIsOpen(article.getArticleIsOpen()); // getter 사용
         response.setArticleCreatedAt(article.getArticleCreatedAt().toString());
         response.setArticleLikeCount(article.getArticleLikeCount() != null ? article.getArticleLikeCount() : 0);
 
         // 좋아요 여부 확인
         response.setArticleIsLiked(checkIfUserLikedArticle(article, user));
 
-        // 이미지 URL 리스트
+        // 이미지 URL 리스트 변환
         if (article.getImageUrls() != null) {
             List<String> imageUrls = article.getImageUrls().stream()
                     .map(ImageUrl::getImageUrl)
@@ -151,7 +155,7 @@ public class ArticleService {
         return response;
     }
 
-
+    // Comment -> CommentResponse 변환 메서드
     private CommentResponse mapToCommentResponse(Comment comment) {
         CommentResponse response = new CommentResponse();
         response.setCommentId(comment.getCommentId());
@@ -161,6 +165,7 @@ public class ArticleService {
         response.setCommentCreatedAt(comment.getCommentCreatedAt().toString());
         return response;
     }
+
 
     boolean checkIfUserLikedArticle(Article article, User user) {
         // 좋아요 여부를 확인하는 로직 구현

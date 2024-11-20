@@ -10,14 +10,17 @@ import java.util.List;
 @AllArgsConstructor
 public class MailListResponse {
 
-//    @JsonProperty("receiver_id")
-//    private String receiverId;
-//
     @JsonProperty("receiver_name")
     private String receiverName;
 
     @JsonProperty("mail_list")
     private List<MailDetail> mailList;
+
+    @JsonProperty("total_pages")
+    private int totalPages; // 전체 페이지 수
+
+    @JsonProperty("current_page")
+    private int currentPage; // 현재 페이지 번호
 
     @Data
     @AllArgsConstructor
@@ -33,6 +36,5 @@ public class MailListResponse {
 
         @JsonProperty("mail_writer_id")
         private String mailWriterId;
-
     }
 }

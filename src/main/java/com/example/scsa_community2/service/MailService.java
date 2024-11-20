@@ -8,10 +8,17 @@ import com.example.scsa_community2.entity.Mail;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.custom.EntityNotFoundException;
 import com.example.scsa_community2.exception.custom.UnauthorizedAccessException;
+import com.example.scsa_community2.exception.error.BaseException;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.repository.MailRepository;
 import com.example.scsa_community2.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -81,24 +88,27 @@ public class MailService {
     }
 
 
-    public MailListResponse getMailList(String requestorId, String receiverId) {
+    public MailListResponse getMailList(String requestorId, String receiverId, int currentPage) {
         // 요청자와 수신자 확인
         User requestor = userRepository.findById(requestorId)
-                .orElseThrow(() -> new EntityNotFoundException("Requestor not found"));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA, "Requestor not found"));
 
         User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA, "Receiver not found"));
 
         // 같은 학기인지 확인
         if (!requestor.getUserSemester().getSemesterId().equals(receiver.getUserSemester().getSemesterId())) {
-            throw new UnauthorizedAccessException("Receiver is in a different semester");
+            throw new BaseException(GlobalErrorCode.UNAUTHORIZED, "Receiver is in a different semester");
         }
 
-        // 수신된 메일 목록 조회
-//        List<Mail> mails = mailRepository.findByReceiver_UserId(receiverId);
-        List<Mail> mails = mailRepository.findByReceiver_UserIdOrderByMailCreatedAtDesc(receiverId);
+        // 페이지네이션 설정
+        Pageable pageable = PageRequest.of(currentPage, 10, Sort.by(Sort.Direction.DESC, "mailCreatedAt"));
+
+        // 페이지네이션된 메일 목록 조회
+        Page<Mail> mailPage = mailRepository.findByReceiver_UserIdOrderByMailCreatedAtDesc(receiverId, pageable);
+
         // DTO 변환
-        List<MailListResponse.MailDetail> mailDetails = mails.stream()
+        List<MailListResponse.MailDetail> mailDetails = mailPage.getContent().stream()
                 .map(mail -> new MailListResponse.MailDetail(
                         mail.getMailId(),
                         mail.getMailContent(),
@@ -108,9 +118,12 @@ public class MailService {
                 .collect(Collectors.toList());
 
         // 응답 생성
-//        return new MailListResponse(receiverId, receiver.getUserName(), mailDetails);
-//        return new MailListResponse(mailDetails);
-        return new MailListResponse(receiver.getUserName(), mailDetails);
+        return new MailListResponse(
+                receiver.getUserName(),
+                mailDetails,
+                mailPage.getTotalPages(),
+                currentPage
+        );
     }
 
     public void deleteMail(Long mailId, String senderId) {

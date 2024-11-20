@@ -10,6 +10,9 @@ import com.example.scsa_community2.service.MailService;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -60,27 +63,23 @@ public class MailControl {
     }
 
     @GetMapping("/{user_id}")
-    @Operation(description = "Retrieves the list of mails received by a specific user.")
     public ResponseEntity<MailListResponse> getMailList(
             @PathVariable("user_id") String userId,
-            @AuthenticationPrincipal PrincipalDetails userDetails){
-//    public ResponseEntity<?> getMailList(@PathVariable("user_id") String userId, @AuthenticationPrincipal PrincipalDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails userDetails,
+            @RequestParam(defaultValue = "0") int currentPage // 현재 페이지 번호 (0부터 시작)
+    ) {
+        // 인증 실패 처리
         if (userDetails == null || userDetails.getUser() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+            throw new UnauthorizedAccessException("User must be logged in.");
         }
+
+        // 요청자 ID
         String requestorId = userDetails.getUser().getUserId();
-        try {
-            MailListResponse response = mailService.getMailList(requestorId, userId);
-//            List<MailListResponse.MailDetail> mailList = response.getMailList();
-//            return ResponseEntity.ok(response); // 200
-            return ResponseEntity.ok(response);
-        } catch (UnauthorizedAccessException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
-        }
+
+        // 메일 목록 조회
+        MailListResponse response = mailService.getMailList(requestorId, userId, currentPage);
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{mail_id}")

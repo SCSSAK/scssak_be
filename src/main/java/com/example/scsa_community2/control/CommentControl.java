@@ -1,8 +1,8 @@
 package com.example.scsa_community2.control;
 
 import com.example.scsa_community2.dto.request.CommentRequest;
-import com.example.scsa_community2.exception.BaseException;
-import com.example.scsa_community2.exception.ErrorCode;
+import com.example.scsa_community2.exception.error.BaseException;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.service.CommentService;
 
@@ -53,10 +53,10 @@ public class CommentControl {
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
             // 비즈니스 로직 예외 처리
-            if (e.getErrorCode() == ErrorCode.NOT_FOUND_DATA) {
+            if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_FOUND_DATA) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
             }
-            if (e.getErrorCode() == ErrorCode.NOT_PRIVILEGED) {
+            if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_PRIVILEGED) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 기타 예외 500

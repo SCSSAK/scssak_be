@@ -1,6 +1,6 @@
 package com.example.scsa_community2.control;
 
-import com.example.scsa_community2.exception.BaseException;
+import com.example.scsa_community2.exception.error.BaseException;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.service.LikeService;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class LikeControl {
             likeService.toggleLike(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(HttpStatus.valueOf(e.getGlobalErrorCode().getErrorCode())).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }

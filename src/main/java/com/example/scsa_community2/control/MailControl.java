@@ -3,8 +3,8 @@ package com.example.scsa_community2.control;
 import com.example.scsa_community2.dto.request.MailRequest;
 import com.example.scsa_community2.dto.response.MailListResponse;
 import com.example.scsa_community2.dto.response.MailResponse;
-import com.example.scsa_community2.exception.EntityNotFoundException;
-import com.example.scsa_community2.exception.UnauthorizedAccessException;
+import com.example.scsa_community2.exception.custom.EntityNotFoundException;
+import com.example.scsa_community2.exception.custom.UnauthorizedAccessException;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.service.MailService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/mail")

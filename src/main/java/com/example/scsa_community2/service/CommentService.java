@@ -4,8 +4,8 @@ import com.example.scsa_community2.dto.request.CommentRequest;
 import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.Comment;
 import com.example.scsa_community2.entity.User;
-import com.example.scsa_community2.exception.BaseException;
-import com.example.scsa_community2.exception.ErrorCode;
+import com.example.scsa_community2.exception.error.BaseException;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,12 @@ public class CommentService {
     public void createComment(Long articleId, CommentRequest request, User user) {
         // 댓글 내용 검증
         if (request.getCommentContent() == null || request.getCommentContent().trim().isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 400 Bad Request
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400 Bad Request
         }
 
         // articleId로 게시글 조회
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
         // 댓글 생성 및 Article에 추가
         Comment comment = new Comment();
@@ -51,20 +51,20 @@ public class CommentService {
     public void deleteComment(Long articleId, Long commentId, User user) {
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
         // 댓글 조회
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
         // 댓글이 해당 게시글의 댓글인지 확인
         if (!article.getComments().contains(comment)) {
-            throw new BaseException(ErrorCode.NOT_FOUND_DATA); // 404 Not Found
+            throw new BaseException(GlobalErrorCode.NOT_FOUND_DATA); // 404 Not Found
         }
 
         // 댓글 작성자 검증
         if (!comment.getUser().getUserId().equals(user.getUserId())) {
-            throw new BaseException(ErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
+            throw new BaseException(GlobalErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
         }
 
         // 게시글의 댓글 리스트에서 댓글 제거

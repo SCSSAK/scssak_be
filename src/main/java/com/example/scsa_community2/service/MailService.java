@@ -6,8 +6,8 @@ import com.example.scsa_community2.dto.response.MailResponse;
 import com.example.scsa_community2.dto.response.UserMailInfo;
 import com.example.scsa_community2.entity.Mail;
 import com.example.scsa_community2.entity.User;
-import com.example.scsa_community2.exception.EntityNotFoundException;
-import com.example.scsa_community2.exception.UnauthorizedAccessException;
+import com.example.scsa_community2.exception.custom.EntityNotFoundException;
+import com.example.scsa_community2.exception.custom.UnauthorizedAccessException;
 import com.example.scsa_community2.repository.MailRepository;
 import com.example.scsa_community2.repository.UserRepository;
 

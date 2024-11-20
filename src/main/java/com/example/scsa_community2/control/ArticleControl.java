@@ -46,7 +46,7 @@ public class ArticleControl {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new CreateArticleResponse(articleId)); // 201 Created
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build(); // 400, 500 등 처리
+            return ResponseEntity.status(e.getHttpStatus()).build(); // 400, 500 등 처리
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
@@ -66,7 +66,7 @@ public class ArticleControl {
             ArticleDetailResponse articleDetailResponse = articleService.getArticleById(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).body(articleDetailResponse); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build(); // 404, 500 등 처리
+            return ResponseEntity.status(e.getHttpStatus()).build(); // 404, 500 등 처리
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
@@ -90,7 +90,7 @@ public class ArticleControl {
             articleService.updateArticle(articleId, request, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(e.getHttpStatus()).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
@@ -168,7 +168,7 @@ public class ArticleControl {
 
             return ResponseEntity.ok(response); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(e.getHttpStatus()).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }

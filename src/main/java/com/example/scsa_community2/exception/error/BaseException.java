@@ -1,6 +1,7 @@
 package com.example.scsa_community2.exception.error;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public class BaseException extends RuntimeException {
@@ -18,4 +19,10 @@ public class BaseException extends RuntimeException {
         super(customMessage);
         this.errorCode = errorCode;
     }
+
+    // HTTP 상태 코드를 직접 반환
+    public HttpStatus getHttpStatus() {
+        return HttpStatus.valueOf(errorCode.getErrorCode());
+    }
+
 }

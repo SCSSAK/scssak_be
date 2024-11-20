@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleBaseException(BaseException ex) {
         log.warn("Custom Exception 발생: {}", ex.getMessage());
         return ResponseEntity
-                .status(ex.getErrorCode().getErrorCode())
+                .status(ex.getHttpStatus())
                 .body(Map.of("error", ex.getMessage()));
     }
 

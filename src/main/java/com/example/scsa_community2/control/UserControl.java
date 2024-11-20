@@ -9,7 +9,7 @@ import com.example.scsa_community2.dto.response.UserDetailResponse;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.GlobalErrorCode;
+import com.example.scsa_community2.exception.error.ErrorCode;
 import com.example.scsa_community2.jwt.JWTUtil;
 import com.example.scsa_community2.jwt.JWTValType;
 import com.example.scsa_community2.jwt.Token;
@@ -76,7 +76,7 @@ public class UserControl {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(token.getRefreshToken()); // body에는 새로 발급한 access Token 반환
         }
-        throw new BaseException(GlobalErrorCode.INVALID_TOKEN);
+        throw new BaseException(ErrorCode.INVALID_TOKEN);
     }
 
     @GetMapping("/profile/{user-id}")

@@ -1,15 +1,15 @@
 package com.example.scsa_community2.exception.custom;
 
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.GlobalErrorCode;
+import com.example.scsa_community2.exception.error.ErrorCode;
 
 public class EntityNotFoundException extends BaseException {
 
     public EntityNotFoundException() {
-        super(GlobalErrorCode.NOT_FOUND_DATA);
+        super(ErrorCode.NOT_FOUND_DATA);
     }
 
     public EntityNotFoundException(String customMessage) {
-        super(GlobalErrorCode.NOT_FOUND_DATA, customMessage);
+        super(ErrorCode.NOT_FOUND_DATA, customMessage);
     }
 }

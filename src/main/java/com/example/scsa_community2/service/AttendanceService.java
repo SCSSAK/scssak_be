@@ -6,7 +6,7 @@ import com.example.scsa_community2.entity.Attendance;
 import com.example.scsa_community2.entity.Semester;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.GlobalErrorCode;
+import com.example.scsa_community2.exception.error.ErrorCode;
 import com.example.scsa_community2.repository.AttendanceRepository;
 import com.example.scsa_community2.repository.NoticeRepository;
 import com.example.scsa_community2.repository.SemesterRepository;
@@ -97,7 +97,7 @@ public class AttendanceService {
     public MainPageInfo getMainPageInfo(String userId) {
         // 현재 유저 가져오기
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
 
         // 지각 정보 계산
         int userTardyCount = user.getUserTardyCount();

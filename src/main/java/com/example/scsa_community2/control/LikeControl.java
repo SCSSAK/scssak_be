@@ -34,7 +34,7 @@ public class LikeControl {
             likeService.toggleLike(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            return ResponseEntity.status(HttpStatus.valueOf(e.getGlobalErrorCode().getErrorCode())).build();
+            return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }

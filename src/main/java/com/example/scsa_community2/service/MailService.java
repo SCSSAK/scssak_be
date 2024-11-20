@@ -102,7 +102,7 @@ public class MailService {
         }
 
         // 페이지네이션 설정
-        Pageable pageable = PageRequest.of(currentPage, 10, Sort.by(Sort.Direction.DESC, "mailCreatedAt"));
+        Pageable pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "mailCreatedAt"));
 
         // 페이지네이션된 메일 목록 조회
         Page<Mail> mailPage = mailRepository.findByReceiver_UserIdOrderByMailCreatedAtDesc(receiverId, pageable);

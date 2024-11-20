@@ -11,7 +11,7 @@ import com.example.scsa_community2.entity.Comment;
 import com.example.scsa_community2.entity.ImageUrl;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.ErrorCode;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.LikeRepository;
 import com.example.scsa_community2.repository.UserRepository;
@@ -67,7 +67,7 @@ public class ArticleService {
             Article savedArticle = articleRepository.save(article);
             return savedArticle.getArticleId(); // 저장된 게시글 ID 반환
         } catch (Exception e) {
-            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BaseException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -86,16 +86,16 @@ public class ArticleService {
             }
             return imageUrls;
         } catch (Exception e) {
-            throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
+            throw new BaseException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     private void validateCommonFields(String title, String content) {
         if (title == null || title.isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
         if (content == null || content.isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
     }
 
@@ -104,11 +104,11 @@ public class ArticleService {
         validateCommonFields(request.getArticleTitle(), request.getArticleContent());
 
         if (request.getArticleType() == null || !isValidArticleType(request.getArticleType())) {
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 유효하지 않은 articleType
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 유효하지 않은 articleType
         }
 
         if (request.isArticleIsOpen() == null) { // null 체크
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 유효하지 않은 공개 여부
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 유효하지 않은 공개 여부
         }
 
 //        if (request.getImages() == null || request.getImages().isEmpty()) {
@@ -126,7 +126,7 @@ public class ArticleService {
     public ArticleDetailResponse getArticleById(Long articleId, User user) {
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
         // 변환 메서드를 호출하여 DTO 반환
         return mapToArticleDetailResponse(article, user);
@@ -191,11 +191,11 @@ public class ArticleService {
     @Transactional
     public void updateArticle(Long articleId, UpdateArticleRequest request, User user) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA));
 
 
         if (!article.getUser().getUserId().equals(user.getUserId())) {
-            throw new BaseException(ErrorCode.NOT_PRIVILEGED);
+            throw new BaseException(GlobalErrorCode.NOT_PRIVILEGED);
         }
 
         validateUpdateRequest(request);
@@ -222,10 +222,10 @@ public class ArticleService {
 
     private void validateUpdateRequest(UpdateArticleRequest request) {
         if (request.getArticleTitle() != null && request.getArticleTitle().isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
         if (request.getArticleContent() != null && request.getArticleContent().isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
         // 이미지가 선택사항일 경우
 //        if (request.getImages() != null && request.getImages().isEmpty()) {
@@ -237,10 +237,10 @@ public class ArticleService {
     @Transactional
     public void deleteArticle(Long articleId, User user) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA));
 
         if (!article.getUser().getUserId().equals(user.getUserId())) {
-            throw new BaseException(ErrorCode.NOT_PRIVILEGED);
+            throw new BaseException(GlobalErrorCode.NOT_PRIVILEGED);
         }
 
         if (article.getImageUrls() != null && !article.getImageUrls().isEmpty()) {
@@ -257,10 +257,10 @@ public class ArticleService {
 
     public void validateEditPermission(Long articleId, User user) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // 404 Not Found
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // 404 Not Found
 
         if (!article.getUser().getUserId().equals(user.getUserId())) {
-            throw new BaseException(ErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
+            throw new BaseException(GlobalErrorCode.NOT_PRIVILEGED); // 401 Unauthorized
         }
     }
 
@@ -295,11 +295,11 @@ public class ArticleService {
         } else if (openType == 3) {
             // 전체 및 기수 공개 게시물
             if (writerId == null) {
-                throw new BaseException(ErrorCode.INVALID_INPUT); // writerId가 없는 경우 에러 반환
+                throw new BaseException(GlobalErrorCode.INVALID_INPUT); // writerId가 없는 경우 에러 반환
             }
 
             User writer = userRepository.findById(writerId)
-                    .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA)); // writerId가 유효하지 않음
+                    .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA)); // writerId가 유효하지 않음
 
             if (!writer.getUserSemester().equals(currentUser.getUserSemester())) {
                 semesterId = null; // 전체 공개 게시물만 반환
@@ -307,7 +307,7 @@ public class ArticleService {
                 semesterId = currentUser.getUserSemester().getSemesterId(); // 전체 및 기수 공개
             }
         } else {
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 잘못된 openType
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 잘못된 openType
         }
 
         Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, openType, pageable);

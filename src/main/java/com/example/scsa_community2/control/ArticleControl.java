@@ -7,7 +7,7 @@ import com.example.scsa_community2.dto.response.ArticleListResponse;
 import com.example.scsa_community2.dto.response.CreateArticleResponse;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.ErrorCode;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.jwt.PrincipalDetails;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.UserRepository;
@@ -110,9 +110,9 @@ public class ArticleControl {
             articleService.deleteArticle(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            if (e.getErrorCode() == ErrorCode.NOT_FOUND_DATA) {
+            if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_FOUND_DATA) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
-            } else if (e.getErrorCode() == ErrorCode.NOT_PRIVILEGED) {
+            } else if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_PRIVILEGED) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
@@ -135,9 +135,9 @@ public class ArticleControl {
             articleService.validateEditPermission(articleId, userDetails.getUser());
             return ResponseEntity.status(HttpStatus.OK).build(); // 200 OK
         } catch (BaseException e) {
-            if (e.getErrorCode() == ErrorCode.NOT_FOUND_DATA) {
+            if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_FOUND_DATA) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
-            } else if (e.getErrorCode() == ErrorCode.NOT_PRIVILEGED) {
+            } else if (e.getGlobalErrorCode() == GlobalErrorCode.NOT_PRIVILEGED) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error

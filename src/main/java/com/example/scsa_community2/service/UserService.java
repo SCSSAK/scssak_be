@@ -10,7 +10,7 @@ import com.example.scsa_community2.jwt.Token;
 import com.example.scsa_community2.jwt.JWTUtil;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.ErrorCode;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.jwt.UserAuthentication;
 import com.example.scsa_community2.repository.SemesterRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class UserService {
 
         // userSemester ID로 Semester 엔티티를 조회
         Semester semester = semesterRepository.findById(userData.getUserSemester())
-                .orElseThrow(() -> new BaseException(ErrorCode.SEMESTER_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.SEMESTER_NOT_FOUND));
 
         User user = User.builder()
                 .userId(userData.getUserId())
@@ -76,12 +76,12 @@ public class UserService {
         // 유저 ID와 비밀번호 유효성 검증
         if (userLogInReq.getUserId() == null || userLogInReq.getUserId().isEmpty()) {
             logger.warn("로그인 실패: userId가 입력되지 않았습니다.");
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 400 Bad Request
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400 Bad Request
         }
 
         if (userLogInReq.getUserPwd() == null || userLogInReq.getUserPwd().isEmpty()) {
             logger.warn("로그인 실패: 비밀번호가 입력되지 않았습니다.");
-            throw new BaseException(ErrorCode.INVALID_INPUT); // 400 Bad Request
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400 Bad Request
         }
 
         // 유저 찾기
@@ -90,7 +90,7 @@ public class UserService {
         // 비밀번호 검증
         if (!passwordEncoder.matches(userLogInReq.getUserPwd(), user.getUserPwd())) {
             logger.warn("로그인 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
-            throw new BaseException(ErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외 (401 Unauthorized)
+            throw new BaseException(GlobalErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외 (401 Unauthorized)
         }
 
         // JWT 토큰 생성
@@ -103,7 +103,7 @@ public class UserService {
 
     // 유저 정보 찾는 메서드
     public User getUser(String userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+        return userRepository.findById(userId).orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
     }
 
     // 사용자 정보를 통해 refreshToken을 User에 저장하고 jwt Token을 반환
@@ -126,17 +126,17 @@ public class UserService {
     public Token refresh(String refreshToken) {
         String userId = jwtUtil.getUserFromJwt(refreshToken); // 유저 id 추출
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.UNAUTHORIZED)); // 유저 정보 추출
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.UNAUTHORIZED)); // 유저 정보 추출
         String realRefreshToken = user.getRefreshToken(); // 저장된 refreshToken 가지고 오기
 
         // 저장된 리프레시 토큰이 유효하지 않다면 401 에러
         if (realRefreshToken == null || !jwtUtil.validateToken(realRefreshToken).equals(VALID_JWT)) {
-            throw new BaseException(ErrorCode.INVALID_TOKEN);
+            throw new BaseException(GlobalErrorCode.INVALID_TOKEN);
         }
 
         // 저장된 리프레시 토큰의 유효성 검증
         if (!jwtUtil.validateToken(realRefreshToken).equals(VALID_JWT)) {
-            throw new BaseException(ErrorCode.INVALID_TOKEN);
+            throw new BaseException(GlobalErrorCode.INVALID_TOKEN);
         }
 
         // access Token 이 유효하면 엑세스 토큰, 리프레시 토큰 새로 생성 해서 반환
@@ -160,7 +160,7 @@ public class UserService {
     @Transactional
     public void signOut(String userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
         user.resetRefreshToken();
     }
 
@@ -171,7 +171,7 @@ public class UserService {
 
             // 유저 정보 조회
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BaseException(ErrorCode.USER_NOT_FOUND));
+                    .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
 
             // 현재 비밀번호 검증
             if (!isValidCurrentPassword(user, userUpdateRequest.getUser_pwd_current())) {

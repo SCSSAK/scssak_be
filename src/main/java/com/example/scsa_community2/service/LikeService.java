@@ -4,7 +4,7 @@ import com.example.scsa_community2.entity.Article;
 import com.example.scsa_community2.entity.Like;
 import com.example.scsa_community2.entity.User;
 import com.example.scsa_community2.exception.error.BaseException;
-import com.example.scsa_community2.exception.error.ErrorCode;
+import com.example.scsa_community2.exception.error.GlobalErrorCode;
 import com.example.scsa_community2.repository.ArticleRepository;
 import com.example.scsa_community2.repository.LikeRepository;
 import jakarta.transaction.Transactional;
@@ -22,7 +22,7 @@ public class LikeService {
     public void toggleLike(Long articleId, User user) {
         // 1. 게시글 존재 여부 확인
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new BaseException(ErrorCode.NOT_FOUND_DATA));
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.NOT_FOUND_DATA));
 
         // 2. 좋아요 여부 확인
         boolean alreadyLiked = likeRepository.existsByArticleAndUser(article, user);

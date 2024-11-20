@@ -29,11 +29,12 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
             Pageable pageable);
 
     @Query("""
-        SELECT a 
-        FROM Article a 
-        WHERE a.articleIsOpen = true
-        ORDER BY a.articleLikeCount DESC
-    """)
+    SELECT a 
+    FROM Article a 
+    WHERE a.articleIsOpen = true
+    ORDER BY a.articleLikeCount DESC, a.articleCreatedAt DESC
+""")
     List<Article> findPopularArticles(Pageable pageable);
+
 
 }

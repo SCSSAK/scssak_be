@@ -277,8 +277,11 @@ public class ArticleService {
             int orderType
     ) {
         Pageable pageable;
-        if (orderType == 2) { // 좋아요 순 정렬
-            pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "articleLikeCount"));
+        if (orderType == 2) { // 좋아요 순 정렬 후 최신순 정렬
+            pageable = PageRequest.of(currentPage - 1, 10, Sort.by(
+                    Sort.Order.desc("articleLikeCount"), // 첫 번째 정렬 기준: 좋아요 순
+                    Sort.Order.desc("articleCreatedAt")  // 두 번째 정렬 기준: 최신순
+            ));
         } else { // 최신순 정렬 (default)
             pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "articleCreatedAt"));
         }

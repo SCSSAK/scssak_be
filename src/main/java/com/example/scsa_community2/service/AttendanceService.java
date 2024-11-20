@@ -96,62 +96,6 @@ public class AttendanceService {
     }
 
 
-
-//    public MainPageInfo getMainPageInfo(String userId) {
-//        try {
-//            // 사용자 확인
-//            User user = userRepository.findById(userId)
-//                    .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//            // 현재 학기 확인
-//            Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
-//                    .orElseThrow(() -> new RuntimeException("No active semester found"));
-//
-//            // 학기 지각 벌금
-//            int penaltyPerTardy = currentSemester.getSemesterTardyPenalty();
-//
-//            // 학기의 지각 기준 시간
-//            LocalTime tardyTime = currentSemester.getSemesterTardyTime();
-//            if (tardyTime == null) {
-//                throw new RuntimeException("Tardy time is not set for the semester.");
-//            }
-//
-//            // 오늘 날짜 가져오기
-//            LocalDate today = LocalDate.now();
-//
-//
-//            List<String> onTimeUsers = attendanceRepository.findAll().stream()
-//                    .filter(attendance -> attendance.getAttendanceTime().toLocalDate().isEqual(today) // 오늘 출석한 유저만
-//                            && attendance.getAttendanceTime().toLocalTime().isBefore(tardyTime))    // 지각 시간 이전에 출석한 유저만
-//                    .map(attendance -> attendance.getUser().getUserId())                           // 유저 ID 추출
-//                    .toList();
-//
-//
-//            // 전체 유저에서 시간 내 출석자를 제외한 리스트 생성
-//            List<String> lateUsers = userRepository.findAll().stream()
-//                    .map(User::getUserId)
-//                    .filter(userIdInList -> !onTimeUsers.contains(userIdInList)) // 시간 내 출석자를 제외
-//                    .map(userIdInList -> userRepository.findById(userIdInList).get().getUserName()) // 이름으로 변환
-//                    .toList();
-//
-//            // 공지사항 리스트 가져오기
-//            List<String> noticeList = noticeRepository.findByNoticeSemester_SemesterId(currentSemester.getSemesterId())
-//                    .stream()
-//                    .map(Notice::getNoticeContent)
-//                    .collect(Collectors.toList());
-//
-//            return MainPageInfo.builder()
-//                    .userTardyCount(user.getUserTardyCount()) // 사용자의 지각 횟수
-//                    .tardyPenalty(penaltyPerTardy)           // 학기별 지각 벌금
-//                    .absentList(lateUsers)                   // 출석하지 않거나 지각한 유저 리스트
-//                    .noticeList(noticeList)                  // 공지사항 리스트
-//                    .build();
-//        } catch (Exception e) {
-//            log.error("Error while fetching main page info: {}", e.getMessage());
-//            throw new RuntimeException("Error fetching main page info");
-//        }
-//    }
-
     public MainPageInfo getMainPageInfo(String userId) {
         // 현재 유저 가져오기
         User user = userRepository.findById(userId)

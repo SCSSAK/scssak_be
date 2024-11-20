@@ -12,14 +12,18 @@ import java.util.List;
 @AllArgsConstructor
 public class MainPageInfo {
     @JsonProperty("user_tardy_count")
-    private int userTardyCount;     // 유저의 누적 지각 횟수
+    private int userTardyCount;
 
     @JsonProperty("tardy_penalty")
-    private int tardyPenalty;      // 지각으로 인한 벌금 (1회당 10,000원)
+    private int tardyPenalty;
 
     @JsonProperty("absent_list")
-    private List<String> absentList;   // 지각자 명단 (출석하지 않은 인원)
+    private List<String> absentList;
 
     @JsonProperty("notice_list")
-    private List<String> noticeList;  // 공지사항 리스트
+    private List<String> noticeList;
+
+    @JsonProperty("popular_article_list")
+    private List<ArticleResponse> popularArticleList; // 추가
 }
+

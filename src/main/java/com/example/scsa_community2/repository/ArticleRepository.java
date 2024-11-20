@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
@@ -25,5 +27,13 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
             @Param("semesterId") Integer semesterId,
             @Param("openType") Integer openType,
             Pageable pageable);
+
+    @Query("""
+        SELECT a 
+        FROM Article a 
+        WHERE a.articleIsOpen = true
+        ORDER BY a.articleLikeCount DESC
+    """)
+    List<Article> findPopularArticles(Pageable pageable);
 
 }

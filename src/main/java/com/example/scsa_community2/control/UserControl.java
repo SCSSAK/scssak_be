@@ -4,6 +4,7 @@ import com.example.scsa_community2.dto.request.UserLogInRequest;
 import com.example.scsa_community2.dto.request.UserSignUpRequest;
 import com.example.scsa_community2.dto.request.RefreshRequest;
 import com.example.scsa_community2.dto.request.UserUpdateRequest;
+import com.example.scsa_community2.dto.response.ArticleResponse;
 import com.example.scsa_community2.dto.response.MainPageInfo;
 import com.example.scsa_community2.dto.response.UserDetailResponse;
 import com.example.scsa_community2.dto.response.UserLogInResponse;
@@ -14,6 +15,7 @@ import com.example.scsa_community2.jwt.JWTUtil;
 import com.example.scsa_community2.jwt.JWTValType;
 import com.example.scsa_community2.jwt.Token;
 import com.example.scsa_community2.jwt.PrincipalDetails;
+import com.example.scsa_community2.service.ArticleService;
 import com.example.scsa_community2.service.AttendanceService;
 import com.example.scsa_community2.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 
 @Slf4j
 @RestController
@@ -35,6 +39,7 @@ public class UserControl {
 
     private final UserService userService;
     private final AttendanceService attendanceService;
+    private final ArticleService articleService;
     private final JWTUtil jwtUtil;
 
     // 직접 db에 유저 정보 넣기 위한 controller
@@ -151,18 +156,31 @@ public class UserControl {
     }
 
 
+//    @GetMapping("/main")
+//    @Operation(description = "Retrieves the main page information.")
+//    public ResponseEntity<MainPageInfo> getMainPage(@AuthenticationPrincipal PrincipalDetails userDetails) {
+//        if (userDetails == null || userDetails.getUser() == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+//        }
+//
+//        String userId = userDetails.getUser().getUserId();
+//        MainPageInfo mainPageInfo = attendanceService.getMainPageInfo(userId);
+//
+//        return ResponseEntity.status(HttpStatus.OK).body(mainPageInfo);
+//    }
+
     @GetMapping("/main")
-    @Operation(description = "Retrieves the main page information.")
     public ResponseEntity<MainPageInfo> getMainPage(@AuthenticationPrincipal PrincipalDetails userDetails) {
         if (userDetails == null || userDetails.getUser() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
         }
 
         String userId = userDetails.getUser().getUserId();
         MainPageInfo mainPageInfo = attendanceService.getMainPageInfo(userId);
 
-        return ResponseEntity.status(HttpStatus.OK).body(mainPageInfo);
+        return ResponseEntity.ok(mainPageInfo); // 200 OK
     }
+
 
 
 }

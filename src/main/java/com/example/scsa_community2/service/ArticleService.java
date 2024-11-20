@@ -187,10 +187,7 @@ public class ArticleService {
 
         validateUpdateRequest(request);
 
-//        logger.info("requestArticleTitle: {}", request.getArticleTitle());
-//        logger.info("requestArticleContent: {}", request.getArticleContent());
-//        logger.info("requestArticleType: {}", request.getArticleType());
-//        logger.info("requestisOpen: {}", request.isArticleIsOpen());
+
 
         // 수정 가능한 필드만 업데이트
         if (request.getArticleTitle() != null) {
@@ -206,10 +203,6 @@ public class ArticleService {
             article.setArticleIsOpen(request.isArticleIsOpen());
         }
 
-//        logger.info("articleTitle: {}", article.getArticleTitle());
-//        logger.info("articleContent: {}", article.getArticleContent());
-//        logger.info("articleType: {}", article.getArticleType());
-//        logger.info("isOpen: {}", article.getArticleIsOpen());
         articleRepository.save(article);
     }
 
@@ -312,6 +305,14 @@ public class ArticleService {
         return new ArticleListResponse(totalPage, articles);
     }
 
+    public List<ArticleResponse> getPopularArticles() {
+        Pageable pageable = PageRequest.of(0, 5); // 상위 5개의 인기 게시글
+        List<Article> articles = articleRepository.findPopularArticles(pageable);
+
+        return articles.stream()
+                .map(this::mapToArticleResponse)
+                .collect(Collectors.toList());
+    }
 
 
     private ArticleResponse mapToArticleResponse(Article article) {

@@ -25,5 +25,7 @@ public interface UserRepository extends JpaRepository<User, String> {
 """)
     List<String> findAbsentUsers();
 
+    // 재학생만 조회하는 메서드
+    List<User> findAllByUserIsStudentTrue();
 
 }

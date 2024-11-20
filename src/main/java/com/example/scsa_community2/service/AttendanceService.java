@@ -193,16 +193,40 @@ public class AttendanceService {
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
     @Transactional
     public void resetAttendance() {
-        log.info("Resetting attendance table...");
+        log.info("Resetting attendance and updating tardy counts...");
+
         try {
-//            attendanceRepository.deleteAll();
-//            attendanceRepository.deleteWithSafeUpdateDisabled();
+            // 오늘 날짜 가져오기
+            LocalDate today = LocalDate.now();
+
+            // 모든 재학생 가져오기
+            List<User> students = userRepository.findAllByUserIsStudentTrue();
+
+            // 오늘 출석한 학생의 ID 가져오기
+            List<String> attendedUserIds = attendanceRepository.findAll().stream()
+                    .filter(attendance -> attendance.getAttendanceTime().toLocalDate().isEqual(today))
+                    .map(attendance -> attendance.getUser().getUserId())
+                    .collect(Collectors.toList());
+
+            // 출석하지 않은 학생 처리
+            for (User student : students) {
+                if (!attendedUserIds.contains(student.getUserId())) {
+                    // 지각 횟수 증가
+                    student.setUserTardyCount(student.getUserTardyCount() + 1);
+                    userRepository.save(student);
+                    log.info("User {} did not attend. Tardy count increased.", student.getUserId());
+                }
+            }
+
+            // 출석 기록 초기화
             attendanceRepository.disableSafeUpdates();
             attendanceRepository.deleteRows();
             attendanceRepository.enableSafeUpdates();
+
             log.info("Attendance table successfully cleared.");
         } catch (Exception e) {
-            log.error("Error while clearing attendance table: {}", e.getMessage());
+            log.error("Error while resetting attendance: {}", e.getMessage());
         }
     }
+
 }

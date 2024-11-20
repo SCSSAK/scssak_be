@@ -66,7 +66,7 @@ public class MailControl {
     public ResponseEntity<MailListResponse> getMailList(
             @PathVariable("user_id") String userId,
             @AuthenticationPrincipal PrincipalDetails userDetails,
-            @RequestParam(defaultValue = "1") int currentPage // 현재 페이지 번호 (1부터 시작)
+            @RequestParam(value = "current_page", defaultValue = "1") int currentPage // 현재 페이지 번호 (1부터 시작)
     ) {
         // 인증 실패 처리
         if (userDetails == null || userDetails.getUser() == null) {

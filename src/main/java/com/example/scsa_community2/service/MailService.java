@@ -32,7 +32,9 @@ public class MailService {
 
         // 같은 학기 사용자 조회
         Integer semester = user.getUserSemester().getSemesterId();
-        List<User> usersInSemester = userRepository.findUsersBySemesterId(semester);
+//        List<User> usersInSemester = userRepository.findUsersBySemesterId(semester);
+        List<User> usersInSemester = userRepository.findUsersBySemesterIdSortedByName(semester);
+
 
         // 기준 시간 (현재 - 24시간)
         LocalDateTime sinceTime = LocalDateTime.now().minusDays(1);

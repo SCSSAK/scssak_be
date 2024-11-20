@@ -28,4 +28,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     // 재학생만 조회하는 메서드
     List<User> findAllByUserIsStudentTrue();
 
+    // 같은 학기 메일 유저들 이름 순서대로 반환하기
+    @Query("SELECT u FROM User u WHERE u.userSemester.semesterId = :semester ORDER BY u.userName ASC")
+    List<User> findUsersBySemesterIdSortedByName(@Param("semester") Integer semester);
 }

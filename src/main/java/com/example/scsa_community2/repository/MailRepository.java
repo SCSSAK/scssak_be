@@ -1,6 +1,7 @@
 package com.example.scsa_community2.repository;
 
 import com.example.scsa_community2.entity.Mail;
+import com.example.scsa_community2.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,8 @@ public interface MailRepository extends JpaRepository<Mail, Long> {
     boolean hasNewMail(@Param("receiverId") String receiverId, @Param("sinceTime") LocalDateTime sinceTime);
 //    List<Mail> findByReceiver_UserId(String receiverId);
     List<Mail> findByReceiver_UserIdOrderByMailCreatedAtDesc(String receiverId);
+
+
 
 }
 

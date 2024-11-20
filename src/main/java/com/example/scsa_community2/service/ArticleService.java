@@ -289,7 +289,8 @@ public class ArticleService {
             throw new BaseException(ErrorCode.INVALID_INPUT); // 잘못된 openType
         }
 
-        Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, pageable);
+//        Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, pageable);
+        Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, openType, pageable);
 
         // 게시글 목록 변환
         List<ArticleResponse> articles = articlePage.getContent().stream()

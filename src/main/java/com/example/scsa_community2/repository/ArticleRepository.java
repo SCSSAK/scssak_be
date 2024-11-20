@@ -12,15 +12,29 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
+    //    @Query("SELECT a FROM Article a " +
+//            "WHERE (:articleType IS NULL OR a.articleType = :articleType) " +
+//            "AND (:keyword = '' OR a.articleTitle LIKE %:keyword% OR a.articleContent LIKE %:keyword%) " +
+//            "AND (:writerId IS NULL OR a.user.userId = :writerId) " +
+//            "AND (a.articleIsOpen = true OR (a.articleSemester = :semesterId AND :semesterId IS NOT NULL))")
+//    Page<Article> findArticles(
+//            @Param("articleType") Integer articleType,
+//            @Param("keyword") String keyword,
+//            @Param("writerId") String writerId,
+//            @Param("semesterId") Integer semesterId,
+//            Pageable pageable);
     @Query("SELECT a FROM Article a " +
             "WHERE (:articleType IS NULL OR a.articleType = :articleType) " +
             "AND (:keyword = '' OR a.articleTitle LIKE %:keyword% OR a.articleContent LIKE %:keyword%) " +
             "AND (:writerId IS NULL OR a.user.userId = :writerId) " +
-            "AND (a.articleIsOpen = true OR (a.articleSemester = :semesterId AND :semesterId IS NOT NULL))")
+            "AND ((:openType = 2 AND a.articleIsOpen = false AND a.articleSemester = :semesterId) " +
+            "OR (:openType != 2 AND (a.articleIsOpen = true OR (a.articleSemester = :semesterId AND :semesterId IS NOT NULL))))")
     Page<Article> findArticles(
             @Param("articleType") Integer articleType,
             @Param("keyword") String keyword,
             @Param("writerId") String writerId,
             @Param("semesterId") Integer semesterId,
+            @Param("openType") Integer openType,
             Pageable pageable);
+
 }

@@ -151,29 +151,27 @@ public class ArticleControl {
             @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
             @RequestParam(value = "writer_id", required = false) String writerId,
             @RequestParam(value = "current_page", defaultValue = "1") int currentPage,
+            @RequestParam(value = "order_type", defaultValue = "1") int orderType,
             @AuthenticationPrincipal PrincipalDetails userDetails) {
 
         if (userDetails == null || userDetails.getUser() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
         }
-        logger.info("open_type: {}",openType);
-        User currentUser = userDetails.getUser();
 
         try {
-            // 서비스 호출
+            // 사용자 정보와 요청 매개변수로 서비스 호출
+            User currentUser = userDetails.getUser();
             ArticleListResponse response = articleService.getArticles(
-                    currentUser, openType, articleType, keyword, writerId, currentPage
-            );
+                    currentUser, openType, articleType, keyword, writerId, currentPage, orderType);
 
-            // 성공 응답
             return ResponseEntity.ok(response); // 200 OK
-
         } catch (BaseException e) {
             return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getErrorCode())).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
+
 
 
 

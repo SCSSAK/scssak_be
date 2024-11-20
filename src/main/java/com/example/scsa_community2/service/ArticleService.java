@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -259,9 +260,15 @@ public class ArticleService {
             Integer articleType,
             String keyword,
             String writerId,
-            int currentPage
+            int currentPage,
+            int orderType
     ) {
-        Pageable pageable = PageRequest.of(currentPage - 1, 10); // 한 페이지당 10개
+        Pageable pageable;
+        if (orderType == 2) { // 좋아요 순 정렬
+            pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "articleLikeCount"));
+        } else { // 최신순 정렬 (default)
+            pageable = PageRequest.of(currentPage - 1, 10, Sort.by(Sort.Direction.DESC, "articleCreatedAt"));
+        }
 
         Integer semesterId = null;
 
@@ -269,7 +276,7 @@ public class ArticleService {
             // 전체 공개 게시물만
             semesterId = null;
         } else if (openType == 2) {
-            // 기수 공개 게시물
+            // 기수 공개 게시물만
             semesterId = currentUser.getUserSemester().getSemesterId();
         } else if (openType == 3) {
             // 전체 및 기수 공개 게시물
@@ -289,7 +296,6 @@ public class ArticleService {
             throw new BaseException(ErrorCode.INVALID_INPUT); // 잘못된 openType
         }
 
-//        Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, pageable);
         Page<Article> articlePage = articleRepository.findArticles(articleType, keyword, writerId, semesterId, openType, pageable);
 
         // 게시글 목록 변환
@@ -300,6 +306,7 @@ public class ArticleService {
         int totalPage = Math.max(1, articlePage.getTotalPages()); // 최소 1페이지 반환
         return new ArticleListResponse(totalPage, articles);
     }
+
 
 
     private ArticleResponse mapToArticleResponse(Article article) {

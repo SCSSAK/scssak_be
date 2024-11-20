@@ -52,8 +52,8 @@ public class ArticleService {
         Article article = new Article();
         article.setArticleTitle(request.getArticleTitle());
         article.setArticleContent(request.getArticleContent());
-        article.setArticleType(request.getArticleType());
-        article.setArticleIsOpen(request.isArticleIsOpen());
+        article.setArticleType(request.getArticleType() != null ? request.getArticleType() : 1); // 기본값 1
+        article.setArticleIsOpen(request.isArticleIsOpen() != null ? request.isArticleIsOpen() : false); // 기본값 false
         article.setArticleSemester(user.getUserSemester().getSemesterId());
         article.setArticleCreatedAt(LocalDateTime.now());
         article.setUser(user);
@@ -72,6 +72,7 @@ public class ArticleService {
             throw new BaseException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
     private List<ImageUrl> uploadImagesToS3(List<MultipartFile> images) {
@@ -104,10 +105,24 @@ public class ArticleService {
     private void validateCreateRequest(CreateArticleRequest request) {
         validateCommonFields(request.getArticleTitle(), request.getArticleContent());
 
-        if (request.getImages() == null || request.getImages().isEmpty()) {
-            throw new BaseException(ErrorCode.INVALID_INPUT);
+        if (request.getArticleType() == null || !isValidArticleType(request.getArticleType())) {
+            throw new BaseException(ErrorCode.INVALID_INPUT); // 유효하지 않은 articleType
         }
+
+        if (request.isArticleIsOpen() == null) { // null 체크
+            throw new BaseException(ErrorCode.INVALID_INPUT); // 유효하지 않은 공개 여부
+        }
+
+//        if (request.getImages() == null || request.getImages().isEmpty()) {
+//            throw new BaseException(ErrorCode.INVALID_INPUT); // 이미지는 필수
+//        }
     }
+
+    private boolean isValidArticleType(Integer articleType) {
+        // 유효한 articleType 값의 범위를 정의 (예: 1, 2, 3, 4)
+        return List.of(1, 2, 3, 4, 5).contains(articleType);
+    }
+
 
 
     public ArticleDetailResponse getArticleById(Long articleId, User user) {

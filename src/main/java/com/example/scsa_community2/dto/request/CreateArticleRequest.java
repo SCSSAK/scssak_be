@@ -15,8 +15,8 @@ public class CreateArticleRequest {
 
     private String article_title; // snake_case
     private String article_content; // snake_case
-    private int article_type; // snake_case
-    private boolean article_is_open; // snake_case
+    private Integer article_type; // snake_case
+    private Boolean article_is_open; // snake_case
     private List<MultipartFile> images;
 
     public String getArticleTitle() {
@@ -27,11 +27,11 @@ public class CreateArticleRequest {
         return article_content;
     }
 
-    public int getArticleType() {
+    public Integer getArticleType() {
         return article_type;
     }
 
-    public boolean isArticleIsOpen() {
+    public Boolean isArticleIsOpen() {
         return article_is_open;
     }
 }

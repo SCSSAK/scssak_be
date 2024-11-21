@@ -41,15 +41,8 @@ public class ArticleControl {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
         }
 
-        try {
-            Long articleId = articleService.createArticle(request, userDetails.getUser());
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new CreateArticleResponse(articleId)); // 201 Created
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).build(); // 400, 500 등 처리
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
-        }
+        Long articleId = articleService.createArticle(request, userDetails.getUser());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CreateArticleResponse(articleId));
     }
 
 

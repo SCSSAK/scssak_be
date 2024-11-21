@@ -63,12 +63,15 @@ public class ArticleService {
         }
 
         // 게시글 저장
-        try {
-            Article savedArticle = articleRepository.save(article);
-            return savedArticle.getArticleId(); // 저장된 게시글 ID 반환
-        } catch (Exception e) {
-            throw new BaseException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
-        }
+//        try {
+//            Article savedArticle = articleRepository.save(article);
+//            return savedArticle.getArticleId(); // 저장된 게시글 ID 반환
+//        } catch (Exception e) {
+//            throw new BaseException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+//        }
+        // 게시글 저장 (try-catch 제거)
+        Article savedArticle = articleRepository.save(article);
+        return savedArticle.getArticleId(); // 저장된 게시글 ID 반환
     }
 
 

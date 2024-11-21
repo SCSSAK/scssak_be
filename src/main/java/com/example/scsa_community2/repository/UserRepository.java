@@ -15,15 +15,27 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u FROM User u WHERE u.userSemester.semesterId = :semesterId")
     List<User> findUsersBySemesterId(@Param("semesterId") Integer semesterId);
 
+//    @Query("""
+//    SELECT u.userName
+//    FROM User u
+//    LEFT JOIN Attendance a ON u.userId = a.user.userId
+//    WHERE u.userSemester.semesterTardyTime IS NOT NULL
+//      AND (a.attendanceTime IS NULL OR
+//           a.attendanceTime > FUNCTION('TIMESTAMP', CURRENT_DATE, u.userSemester.semesterTardyTime))
+//""")
+//    List<String> findAbsentUsers();
+
     @Query("""
     SELECT u.userName 
     FROM User u 
     LEFT JOIN Attendance a ON u.userId = a.user.userId
-    WHERE u.userSemester.semesterTardyTime IS NOT NULL
+    WHERE u.userIsStudent = true
+      AND u.userSemester.semesterTardyTime IS NOT NULL
       AND (a.attendanceTime IS NULL OR 
            a.attendanceTime > FUNCTION('TIMESTAMP', CURRENT_DATE, u.userSemester.semesterTardyTime))
 """)
     List<String> findAbsentUsers();
+
 
     // 재학생만 조회하는 메서드
     List<User> findAllByUserIsStudentTrue();

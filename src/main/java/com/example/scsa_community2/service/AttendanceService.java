@@ -11,9 +11,12 @@ import com.example.scsa_community2.repository.AttendanceRepository;
 import com.example.scsa_community2.repository.NoticeRepository;
 import com.example.scsa_community2.repository.SemesterRepository;
 import com.example.scsa_community2.repository.UserRepository;
+import com.example.scsa_community2.util.IpUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,7 +41,22 @@ public class AttendanceService {
     private final NoticeRepository noticeRepository;
     private final ArticleService articleService;
 
-    public ResponseEntity<Void> markAttendance(String userId) {
+    @Value("${attendance.allowed.ip-ranges}") // 설정 파일에서 허용 IP 가져오기
+    private String allowedIpRanges;
+
+    public ResponseEntity<Void> markAttendance(String userId, HttpServletRequest request) {
+        // 클라이언트 IP 가져오기
+        String clientIp = IpUtils.getClientIp(request);
+
+        // 허용된 IP 범위 리스트
+        List<String> allowedRanges = List.of(allowedIpRanges.split(","));
+
+        // IP 검증
+        if (!IpUtils.isIpAllowed(clientIp, allowedRanges)) {
+            log.warn("Unauthorized IP: {}", clientIp);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
+        }
+
         try {
             // 유저 확인
             User user = userRepository.findById(userId)

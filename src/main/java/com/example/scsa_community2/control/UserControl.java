@@ -18,6 +18,7 @@ import com.example.scsa_community2.service.ArticleService;
 import com.example.scsa_community2.service.AttendanceService;
 import com.example.scsa_community2.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -149,15 +150,16 @@ public class UserControl {
     }
 
 
-    @PostMapping("/attend") // 명세서에 따른 출석 API 경로
+    @PostMapping("/attend")
     @Operation(description = "Marks the user's attendance for the day.")
-    public ResponseEntity<Void> markAttendance(@AuthenticationPrincipal PrincipalDetails userDetails) {
+    public ResponseEntity<Void> markAttendance(@AuthenticationPrincipal PrincipalDetails userDetails,
+                                               HttpServletRequest request) {
         if (userDetails == null || userDetails.getUser() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401: 인증되지 않은 사용자
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
         }
 
         String userId = userDetails.getUser().getUserId();
-        return attendanceService.markAttendance(userId); // AttendanceService 호출
+        return attendanceService.markAttendance(userId, request); // HttpServletRequest 전달
     }
 
 

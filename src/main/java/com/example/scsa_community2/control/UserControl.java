@@ -121,19 +121,33 @@ public class UserControl {
                 .build();
     }
 
+//    @PutMapping("/profile")
+//    @Operation(description = "유저 페이지 수정")
+//    public ResponseEntity<Void> updateUserProfile(@ModelAttribute UserUpdateRequest userUpdateRequest,
+//                                                  @AuthenticationPrincipal PrincipalDetails userDetails) {
+//        if (userDetails == null || userDetails.getUser() == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+//
+//        log.info("Received user update request: {}", userUpdateRequest);
+//        String userId = userDetails.getUser().getUserId();
+//
+//        return userService.updateUserProfile(userId, userUpdateRequest);
+//    }
+
     @PutMapping("/profile")
     @Operation(description = "유저 페이지 수정")
-    public ResponseEntity<Void> updateUserProfile(@ModelAttribute UserUpdateRequest userUpdateRequest,
-                                                  @AuthenticationPrincipal PrincipalDetails userDetails) {
+    public ResponseEntity<Void> updateUserProfile(
+            @AuthenticationPrincipal PrincipalDetails userDetails,
+            @Valid @ModelAttribute UserUpdateRequest userUpdateRequest) { // @Valid 추가
         if (userDetails == null || userDetails.getUser() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        log.info("Received user update request: {}", userUpdateRequest);
-        String userId = userDetails.getUser().getUserId();
-
-        return userService.updateUserProfile(userId, userUpdateRequest);
+        userService.updateUserProfile(userDetails.getUser().getUserId(), userUpdateRequest);
+        return ResponseEntity.ok().build();
     }
+
 
     @PostMapping("/attend") // 명세서에 따른 출석 API 경로
     @Operation(description = "Marks the user's attendance for the day.")

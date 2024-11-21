@@ -17,8 +17,6 @@ public class Like {
     private Article article;
 
     @Id
-//    private String userId;
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

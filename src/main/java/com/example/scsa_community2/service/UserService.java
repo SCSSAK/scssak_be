@@ -154,49 +154,88 @@ public class UserService {
         user.resetRefreshToken();
     }
 
+//    @Transactional
+//    public ResponseEntity<Void> updateUserProfile(String userId, UserUpdateRequest userUpdateRequest) {
+//        try {
+//            logger.info("user_pwd_current: {}", userUpdateRequest.getUser_pwd_current());
+//
+//            // 유저 정보 조회
+//            User user = userRepository.findById(userId)
+//                    .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
+//
+//            // 현재 비밀번호 검증
+//            if (!isValidCurrentPassword(user, userUpdateRequest.getUser_pwd_current())) {
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+//            }
+//
+//            // 새 비밀번호 설정
+//            if (!updatePassword(user, userUpdateRequest)) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400
+//            }
+//
+//            // 기타 유저 정보 업데이트
+//            updateUserDetails(user, userUpdateRequest);
+//
+//            // 프로필 이미지 업데이트
+//            MultipartFile userImg = userUpdateRequest.getUser_img();
+//            if (userImg != null && !userImg.isEmpty()) {
+//                // 기존 이미지 삭제 후 새 이미지 업로드
+//                if (user.getUserImg() != null && !user.getUserImg().isEmpty()) {
+//                    s3Service.deleteFile(user.getUserImg());
+//                }
+//                String imageUrl = s3Service.uploadFile(userImg);
+//                user.setUserImg(imageUrl);
+//            }
+//
+//
+//            userRepository.save(user);
+//            logger.info("유저 정보가 성공적으로 업데이트되었습니다.");
+//            return ResponseEntity.status(HttpStatus.OK).build();
+//
+//        } catch (Exception e) {
+//            logger.error("Error updating user profile: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+//        }
+//    }
+
     @Transactional
-    public ResponseEntity<Void> updateUserProfile(String userId, UserUpdateRequest userUpdateRequest) {
-        try {
-            logger.info("user_pwd_current: {}", userUpdateRequest.getUser_pwd_current());
+    public void updateUserProfile(String userId, UserUpdateRequest userUpdateRequest) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
 
-            // 유저 정보 조회
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND));
+        // 현재 비밀번호 검증
+        if (!isValidCurrentPassword(user, userUpdateRequest.getUser_pwd_current())) {
+            throw new BaseException(GlobalErrorCode.INVALID_PASSWORD);
+        }
 
-            // 현재 비밀번호 검증
-            if (!isValidCurrentPassword(user, userUpdateRequest.getUser_pwd_current())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        // 새 비밀번호 설정
+        if (!updatePassword(user, userUpdateRequest)) {
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT);
+        }
+
+        // 기타 유저 정보 업데이트
+        updateUserDetails(user, userUpdateRequest);
+
+        // 프로필 이미지 업데이트
+        if (userUpdateRequest.getUser_img() != null) {
+            updateUserProfileImage(user, userUpdateRequest.getUser_img());
+        }
+
+        userRepository.save(user);
+    }
+
+    private void updateUserProfileImage(User user, MultipartFile userImg) {
+        // 프로필 이미지 업데이트
+        if (userImg != null && !userImg.isEmpty()) {
+            // 기존 이미지 삭제 후 새 이미지 업로드
+            if (user.getUserImg() != null && !user.getUserImg().isEmpty()) {
+                s3Service.deleteFile(user.getUserImg());
             }
-
-            // 새 비밀번호 설정
-            if (!updatePassword(user, userUpdateRequest)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400
-            }
-
-            // 기타 유저 정보 업데이트
-            updateUserDetails(user, userUpdateRequest);
-
-            // 프로필 이미지 업데이트
-            MultipartFile userImg = userUpdateRequest.getUser_img();
-            if (userImg != null && !userImg.isEmpty()) {
-                // 기존 이미지 삭제 후 새 이미지 업로드
-                if (user.getUserImg() != null && !user.getUserImg().isEmpty()) {
-                    s3Service.deleteFile(user.getUserImg());
-                }
-                String imageUrl = s3Service.uploadFile(userImg);
-                user.setUserImg(imageUrl);
-            }
-
-
-            userRepository.save(user);
-            logger.info("유저 정보가 성공적으로 업데이트되었습니다.");
-            return ResponseEntity.status(HttpStatus.OK).build();
-
-        } catch (Exception e) {
-            logger.error("Error updating user profile: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+            String imageUrl = s3Service.uploadFile(userImg);
+            user.setUserImg(imageUrl);
         }
     }
+
 
     // 현재 비밀번호 검증
     private boolean isValidCurrentPassword(User user, String currentPassword) {

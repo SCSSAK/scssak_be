@@ -71,26 +71,16 @@ public class UserService {
         return userRepository.save(user);
     }
 
+
     @Transactional
     public UserLogInResponse logIn(UserLogInRequest userLogInReq) {
-        // 유저 ID와 비밀번호 유효성 검증
-        if (userLogInReq.getUserId() == null || userLogInReq.getUserId().isEmpty()) {
-            logger.warn("로그인 실패: userId가 입력되지 않았습니다.");
-            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400 Bad Request
-        }
-
-        if (userLogInReq.getUserPwd() == null || userLogInReq.getUserPwd().isEmpty()) {
-            logger.warn("로그인 실패: 비밀번호가 입력되지 않았습니다.");
-            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400 Bad Request
-        }
-
         // 유저 찾기
         User user = getUser(userLogInReq.getUserId());
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(userLogInReq.getUserPwd(), user.getUserPwd())) {
             logger.warn("로그인 실패: userId={} (비밀번호 불일치)", userLogInReq.getUserId());
-            throw new BaseException(GlobalErrorCode.INVALID_PASSWORD); // 비밀번호 불일치 시 예외 (401 Unauthorized)
+            throw new BaseException(GlobalErrorCode.INVALID_PASSWORD); // 비밀번호 불일치
         }
 
         // JWT 토큰 생성

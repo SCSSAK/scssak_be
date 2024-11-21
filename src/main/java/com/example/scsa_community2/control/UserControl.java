@@ -18,6 +18,7 @@ import com.example.scsa_community2.service.ArticleService;
 import com.example.scsa_community2.service.AttendanceService;
 import com.example.scsa_community2.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -51,18 +52,11 @@ public class UserControl {
 
     @PostMapping("/login")
     @Operation(description = "로그인")
-    public ResponseEntity<?> logIn(@RequestBody UserLogInRequest userRequest) {
-        try {
-            UserLogInResponse userLogInResponseDto = userService.logIn(userRequest);
-            return ResponseEntity.status(HttpStatus.OK).body(userLogInResponseDto); // 성공 시 200
-        } catch (BaseException e) {
-            // 모든 BaseException의 경우 401 반환
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (Exception e) {
-            // 예상치 못한 예외는 서버 오류로 처리
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<UserLogInResponse> logIn(@Valid @RequestBody UserLogInRequest userRequest) {
+        UserLogInResponse userLogInResponse = userService.logIn(userRequest);
+        return ResponseEntity.ok(userLogInResponse);
     }
+
 
 
     @PostMapping("/refresh")

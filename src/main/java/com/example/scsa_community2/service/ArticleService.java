@@ -221,17 +221,27 @@ public class ArticleService {
 
 
     private void validateUpdateRequest(UpdateArticleRequest request) {
+        // 제목 검증
         if (request.getArticleTitle() != null && request.getArticleTitle().isEmpty()) {
             throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
+
+        // 내용 검증
         if (request.getArticleContent() != null && request.getArticleContent().isEmpty()) {
             throw new BaseException(GlobalErrorCode.INVALID_INPUT);
         }
-        // 이미지가 선택사항일 경우
-//        if (request.getImages() != null && request.getImages().isEmpty()) {
-//            throw new BaseException(ErrorCode.INVALID_INPUT);
-//        }
+
+        // articleType 검증
+        if (request.getArticleType() != null && !isValidArticleType(request.getArticleType())) {
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 유효하지 않은 articleType
+        }
+
+        // 이미지가 선택 사항일 경우 (주석 처리 유지)
+        // if (request.getImages() != null && request.getImages().isEmpty()) {
+        //     throw new BaseException(GlobalErrorCode.INVALID_INPUT);
+        // }
     }
+
 
     // DELETE: 게시글 삭제
     @Transactional

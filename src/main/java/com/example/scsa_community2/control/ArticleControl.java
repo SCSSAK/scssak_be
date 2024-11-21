@@ -46,24 +46,18 @@ public class ArticleControl {
     }
 
 
-    @GetMapping("/{articleId}")
-    public ResponseEntity<?> getArticleById(
-            @PathVariable("articleId") Long articleId,
-            @AuthenticationPrincipal PrincipalDetails userDetails) {
+@GetMapping("/{articleId}")
+public ResponseEntity<ArticleDetailResponse> getArticleById(
+        @PathVariable("articleId") Long articleId,
+        @AuthenticationPrincipal PrincipalDetails userDetails) {
 
-        if (userDetails == null || userDetails.getUser() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
-        }
-
-        try {
-            ArticleDetailResponse articleDetailResponse = articleService.getArticleById(articleId, userDetails.getUser());
-            return ResponseEntity.status(HttpStatus.OK).body(articleDetailResponse); // 200 OK
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).build(); // 404, 500 등 처리
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
-        }
+    if (userDetails == null || userDetails.getUser() == null) {
+        throw new BaseException(GlobalErrorCode.UNAUTHORIZED); // 401 Unauthorized
     }
+
+    ArticleDetailResponse articleDetailResponse = articleService.getArticleById(articleId, userDetails.getUser());
+    return ResponseEntity.ok(articleDetailResponse); // 200 OK
+}
 
 
 

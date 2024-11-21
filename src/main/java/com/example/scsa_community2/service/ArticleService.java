@@ -135,6 +135,7 @@ public class ArticleService {
         return mapToArticleDetailResponse(article, user);
     }
 
+
     // Article -> ArticleDetailResponse 변환 메서드
     private ArticleDetailResponse mapToArticleDetailResponse(Article article, User user) {
         ArticleDetailResponse response = new ArticleDetailResponse();

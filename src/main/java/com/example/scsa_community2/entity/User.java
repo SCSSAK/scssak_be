@@ -31,6 +31,7 @@ public class User {
     private String userPosition;
     private String userEmail;
 //    private Integer userSemester;
+    @Column(length = 600)
     private String userMessage;
     private String userSns;
     private String userImg;

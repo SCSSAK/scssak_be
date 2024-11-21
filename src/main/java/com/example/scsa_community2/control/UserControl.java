@@ -122,19 +122,7 @@ public class UserControl {
                 .build();
     }
 
-//    @PutMapping("/profile")
-//    @Operation(description = "유저 페이지 수정")
-//    public ResponseEntity<Void> updateUserProfile(@ModelAttribute UserUpdateRequest userUpdateRequest,
-//                                                  @AuthenticationPrincipal PrincipalDetails userDetails) {
-//        if (userDetails == null || userDetails.getUser() == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
-//
-//        log.info("Received user update request: {}", userUpdateRequest);
-//        String userId = userDetails.getUser().getUserId();
-//
-//        return userService.updateUserProfile(userId, userUpdateRequest);
-//    }
+
 
     @PutMapping("/profile")
     @Operation(description = "유저 페이지 수정")
@@ -163,19 +151,6 @@ public class UserControl {
     }
 
 
-
-//    @GetMapping("/main")
-//    @Operation(description = "Retrieves the main page information.")
-//    public ResponseEntity<MainPageInfo> getMainPage(@AuthenticationPrincipal PrincipalDetails userDetails) {
-//        if (userDetails == null || userDetails.getUser() == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
-//        }
-//
-//        String userId = userDetails.getUser().getUserId();
-//        MainPageInfo mainPageInfo = attendanceService.getMainPageInfo(userId);
-//
-//        return ResponseEntity.status(HttpStatus.OK).body(mainPageInfo);
-//    }
 
     @GetMapping("/main")
     public ResponseEntity<MainPageInfo> getMainPage(@AuthenticationPrincipal PrincipalDetails userDetails) {

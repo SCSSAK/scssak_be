@@ -58,8 +58,6 @@ public class UserControl {
         return ResponseEntity.ok(userLogInResponse);
     }
 
-
-
     @PostMapping("/refresh")
     @Operation(description = "리프레시 토큰으로 엑세스 토큰을 재발급 받는다.")
     public ResponseEntity<?> refresh(@RequestBody RefreshRequest refreshToken) {

@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,74 +42,50 @@ public class AttendanceService {
     private final NoticeRepository noticeRepository;
     private final ArticleService articleService;
 
-    @Value("${attendance.allowed.ip-ranges}") // 설정 파일에서 허용 IP 가져오기
+    @Value("${attendance.allowed.ip-ranges}")
     private String allowedIpRanges;
 
-    public ResponseEntity<Void> markAttendance(String userId, HttpServletRequest request) {
-        // 클라이언트 IP 가져오기
+    public void markAttendance(String userId, HttpServletRequest request) {
+        // 클라이언트 IP 가져오기 및 검증
         String clientIp = IpUtils.getClientIp(request);
-
-        // 허용된 IP 범위 리스트
         List<String> allowedRanges = List.of(allowedIpRanges.split(","));
-
-        // IP 검증
         if (!IpUtils.isIpAllowed(clientIp, allowedRanges)) {
-            log.warn("Unauthorized IP: {}", clientIp);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
+            throw new BaseException(GlobalErrorCode.NOT_PRIVILEGED); // 403: 접근 권한 없음
         }
 
-        try {
-            // 유저 확인
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        // 유저 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.USER_NOT_FOUND)); // 404: 유저 없음
 
-            // 재학생 여부 확인
-            if (!Boolean.TRUE.equals(user.getUserIsStudent())) {
-                log.warn("User {} is not an active student. Attendance not marked.", userId);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400: 재학생 아님
-            }
-
-            // 이미 출석한 경우 확인
-            if (attendanceRepository.existsByUserId(userId)) {
-                log.warn("User {} has already marked attendance.", userId);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build(); // 400: 이미 출석
-            }
-
-            // 학기 정보 가져오기
-            Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
-                    .orElseThrow(() -> new RuntimeException("No active semester found"));
-
-            // 지각 기준 시간 확인
-            LocalTime tardyTime = currentSemester.getSemesterTardyTime();
-            if (tardyTime == null) {
-                throw new RuntimeException("Tardy time is not set for the semester.");
-            }
-
-            LocalDateTime now = LocalDateTime.now();
-
-            // 출석 데이터 생성
-            Attendance attendance = new Attendance();
-            attendance.setUser(user);
-            attendance.setAttendanceTime(now);
-
-            // 지각 여부 확인 및 처리
-            if (now.toLocalTime().isAfter(tardyTime)) {
-                log.info("User {} is late.", userId);
-                user.setUserTardyCount(user.getUserTardyCount() + 1); // 지각 횟수 증가
-                userRepository.save(user); // 유저 데이터 저장
-            } else {
-                log.info("User {} is on time.", userId);
-            }
-
-            // 출석 데이터 저장
-            attendanceRepository.save(attendance);
-
-            log.info("Attendance marked successfully for user {}.", userId);
-            return ResponseEntity.status(HttpStatus.OK).build(); // 200: 성공
-        } catch (Exception e) {
-            log.error("Error while marking attendance for user {}: {}", userId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500: 서버 오류
+        // 재학생 여부 확인
+        if (!Boolean.TRUE.equals(user.getUserIsStudent())) {
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400: 잘못된 입력
         }
+
+        // 이미 출석 여부 확인
+        if (attendanceRepository.existsByUserId(userId)) {
+            throw new BaseException(GlobalErrorCode.INVALID_INPUT); // 400: 잘못된 입력
+        }
+
+        // 학기 정보 및 지각 기준 시간 확인
+        Semester currentSemester = semesterRepository.findBySemesterCpId(user.getUserSemester().getSemesterCpId())
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.SEMESTER_NOT_FOUND)); // 404: 학기 없음
+        LocalTime tardyTime = Optional.ofNullable(currentSemester.getSemesterTardyTime())
+                .orElseThrow(() -> new BaseException(GlobalErrorCode.INTERNAL_SERVER_ERROR)); // 500: 서버 오류
+
+        // 출석 처리
+        LocalDateTime now = LocalDateTime.now();
+        Attendance attendance = new Attendance();
+        attendance.setUser(user);
+        attendance.setAttendanceTime(now);
+
+        // 지각 여부 확인 및 처리
+        if (now.toLocalTime().isAfter(tardyTime)) {
+            user.setUserTardyCount(user.getUserTardyCount() + 1);
+            userRepository.save(user);
+        }
+
+        attendanceRepository.save(attendance);
     }
 
 

@@ -155,12 +155,13 @@ public class UserControl {
     public ResponseEntity<Void> markAttendance(@AuthenticationPrincipal PrincipalDetails userDetails,
                                                HttpServletRequest request) {
         if (userDetails == null || userDetails.getUser() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+            throw new BaseException(GlobalErrorCode.UNAUTHORIZED); // 401: 인증 실패
         }
 
-        String userId = userDetails.getUser().getUserId();
-        return attendanceService.markAttendance(userId, request); // HttpServletRequest 전달
+        attendanceService.markAttendance(userDetails.getUser().getUserId(), request);
+        return ResponseEntity.ok().build(); // 200 OK
     }
+
 
 
 //    @GetMapping("/main")

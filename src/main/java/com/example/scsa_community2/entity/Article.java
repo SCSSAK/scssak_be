@@ -22,6 +22,8 @@ public class Article {
     private User user;
 
     private String articleTitle;
+
+    @Column(length = 3000)
     private String articleContent;
     private Integer articleType;
     private Boolean articleIsOpen;

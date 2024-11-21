@@ -23,7 +23,7 @@ public class Mail {
     @ManyToOne
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
-
+    @Column(length = 600)
     private String mailContent;
     private LocalDateTime mailCreatedAt;
 }

@@ -23,7 +23,9 @@ public class MainPageInfo {
     @JsonProperty("notice_list")
     private List<String> noticeList;
 
-    @JsonProperty("popular_article_list")
-    private List<ArticleResponse> popularArticleList; // 추가
-}
+    @JsonProperty("popular_article_list_opened_false")
+    private List<ArticleResponse> popularArticleListOpenedFalse;
 
+    @JsonProperty("popular_article_list_opened_true")
+    private List<ArticleResponse> popularArticleListOpenedTrue;
+}

@@ -34,7 +34,16 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     WHERE a.articleIsOpen = true
     ORDER BY a.articleLikeCount DESC, a.articleCreatedAt DESC
 """)
-    List<Article> findPopularArticles(Pageable pageable);
+    List<Article> findPopularArticlesOpenedTrue(Pageable pageable);
+
+    @Query("""
+    SELECT a 
+    FROM Article a 
+    WHERE a.articleIsOpen = false AND a.articleSemester = :semesterId
+    ORDER BY a.articleLikeCount DESC, a.articleCreatedAt DESC
+""")
+    List<Article> findPopularArticlesOpenedFalse(@Param("semesterId") Integer semesterId, Pageable pageable);
+
 
 
 }

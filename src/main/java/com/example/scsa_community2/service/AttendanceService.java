@@ -104,17 +104,20 @@ public class AttendanceService {
         // 공지사항 가져오기
         List<String> noticeList = getRecentNotices(3);
 
-        // 인기 게시글 가져오기 (좋아요 순)
-        List<ArticleResponse> popularArticles = articleService.getPopularArticles();
+        // 인기 게시글 가져오기 (기수 공개 및 전체 공개)
+        List<ArticleResponse> popularArticlesOpenedFalse = articleService.getPopularArticles(false, user.getUserSemester().getSemesterId());
+        List<ArticleResponse> popularArticlesOpenedTrue = articleService.getPopularArticles(true, null);
 
         return MainPageInfo.builder()
                 .userTardyCount(userTardyCount)
                 .tardyPenalty(tardyPenalty)
                 .absentList(absentList)
                 .noticeList(noticeList)
-                .popularArticleList(popularArticles)
+                .popularArticleListOpenedFalse(popularArticlesOpenedFalse)
+                .popularArticleListOpenedTrue(popularArticlesOpenedTrue)
                 .build();
     }
+
 
     private List<String> getAbsentUsers() {
         return userRepository.findAbsentUsers();

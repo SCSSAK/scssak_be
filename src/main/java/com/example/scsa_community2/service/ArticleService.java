@@ -335,14 +335,21 @@ public class ArticleService {
         return new ArticleListResponse(totalPage, articles);
     }
 
-    public List<ArticleResponse> getPopularArticles() {
+    public List<ArticleResponse> getPopularArticles(boolean isOpen, Integer semesterId) {
         Pageable pageable = PageRequest.of(0, 5); // 상위 5개의 인기 게시글
-        List<Article> articles = articleRepository.findPopularArticles(pageable);
+
+        List<Article> articles;
+        if (isOpen) {
+            articles = articleRepository.findPopularArticlesOpenedTrue(pageable);
+        } else {
+            articles = articleRepository.findPopularArticlesOpenedFalse(semesterId, pageable);
+        }
 
         return articles.stream()
                 .map(this::mapToArticleResponse)
                 .collect(Collectors.toList());
     }
+
 
 
     private ArticleResponse mapToArticleResponse(Article article) {

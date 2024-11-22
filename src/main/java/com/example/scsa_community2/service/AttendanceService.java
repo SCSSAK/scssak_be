@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +43,8 @@ public class AttendanceService {
     private final SemesterRepository semesterRepository;
     private final NoticeRepository noticeRepository;
     private final ArticleService articleService;
+
+    Logger logger = LoggerFactory.getLogger(AttendanceService.class);
 
     @Value("${attendance.allowed.ip-ranges}")
     private String allowedIpRanges;
@@ -96,7 +100,10 @@ public class AttendanceService {
 
         // 지각 정보 계산
         int userTardyCount = user.getUserTardyCount();
-        int tardyPenalty = userTardyCount * 10000;
+        int tardyPenalty = userTardyCount * user.getUserSemester().getSemesterTardyPenalty();
+
+        logger.info("userTardyCount : {}", userTardyCount);
+        logger.info("tardyPenalty : {}", tardyPenalty);
 
         // 지각자 명단
         List<String> absentList = getAbsentUsers();

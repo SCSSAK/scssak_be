@@ -22,6 +22,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,6 +42,7 @@ public class UserControl {
     private final AttendanceService attendanceService;
     private final ArticleService articleService;
     private final JWTUtil jwtUtil;
+    Logger logger = LoggerFactory.getLogger(UserControl.class);
 
     // 직접 db에 유저 정보 넣기 위한 controller
     @PostMapping("/signUp")
@@ -127,6 +130,7 @@ public class UserControl {
     public ResponseEntity<Void> updateUserProfile(
             @AuthenticationPrincipal PrincipalDetails userDetails,
             @Valid @ModelAttribute UserUpdateRequest userUpdateRequest) { // @Valid 추가
+
         if (userDetails == null || userDetails.getUser() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -140,11 +144,13 @@ public class UserControl {
     @Operation(description = "Marks the user's attendance for the day.")
     public ResponseEntity<Void> markAttendance(@AuthenticationPrincipal PrincipalDetails userDetails,
                                                HttpServletRequest request) {
+
         if (userDetails == null || userDetails.getUser() == null) {
             throw new BaseException(GlobalErrorCode.UNAUTHORIZED); // 401: 인증 실패
         }
 
         attendanceService.markAttendance(userDetails.getUser().getUserId(), request);
+        logger.info("sdfasdfasdfasdfasd");
         return ResponseEntity.ok().build(); // 200 OK
     }
 
